@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
@@ -7,39 +9,47 @@ class MainMenu extends StatefulWidget {
 }
 
 class _MainMenuState extends State<MainMenu> {
+  final _auth = FirebaseAuth.instance;
+  late String email;
+  late String password;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false, //use flexible widgets instead
+      //resizeToAvoidBottomInset: false, //use flexible widgets instead
       backgroundColor: Colors.white,
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          //mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
-              child: Text(
-                "History Buddy",
-                style: TextStyle(
-                  fontSize: 45.0,
-                  fontFamily: 'Pacifico',
-                  fontWeight: FontWeight.w900,
-                ),
+            SizedBox(
+              height: 20.0,
+            ),
+            Text(
+              "History Buddy",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 45.0,
+                fontFamily: 'Pacifico',
+                fontWeight: FontWeight.w900,
               ),
             ),
-            Container(
-              height: 200.0,
-              child: Image.asset('images/Logo.png'),
+            Flexible(
+              child: Container(
+                height: 200.0,
+                child: Image.asset('images/Logo.png'),
+              ),
             ),
             SizedBox(
-              height: 48.0,
+              height: 24.0,
             ),
             TextField(
+              keyboardType: TextInputType.emailAddress,
+              textAlign: TextAlign.center,
               onChanged: (value) {
-                //Do something with the user input.
+                email = value;
               },
               decoration: InputDecoration(
                 hintText: 'Enter your email',
@@ -64,8 +74,10 @@ class _MainMenuState extends State<MainMenu> {
               height: 8.0,
             ),
             TextField(
+              textAlign: TextAlign.center,
+              obscureText: true,
               onChanged: (value) {
-                //Do something with the user input.
+                password = value;
               },
               decoration: InputDecoration(
                 hintText: 'Enter your password.',
@@ -96,8 +108,16 @@ class _MainMenuState extends State<MainMenu> {
                 borderRadius: BorderRadius.all(Radius.circular(30.0)),
                 elevation: 5.0,
                 child: MaterialButton(
-                  onPressed: () {
-                    //Implement login functionality.
+                  onPressed: () async {
+                    try {
+                      final user = await _auth.signInWithEmailAndPassword(
+                          email: email, password: password);
+                      if (user != null) {
+                        Navigator.pushNamed(context, "/homepage");
+                      }
+                    } catch (e) {
+                      print(e);
+                    }
                   },
                   minWidth: 200.0,
                   height: 42.0,

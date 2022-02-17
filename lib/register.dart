@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
 class Register extends StatefulWidget {
@@ -7,20 +8,26 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
+  final _auth = FirebaseAuth.instance;
+  late String name;
+  late String username;
+  late String password;
+  late String email;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: false, //use flexible widgets instead
       backgroundColor: Colors.white,
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+        padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0),
         child: Column(
           //mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Padding(
               padding:
-                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
+                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
               child: Text(
                 "Registration",
                 style: TextStyle(
@@ -30,9 +37,6 @@ class _RegisterState extends State<Register> {
                 ),
               ),
             ),
-            SizedBox(
-              height: 48.0,
-            ),
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 5.0, vertical: 2.0),
@@ -40,7 +44,7 @@ class _RegisterState extends State<Register> {
             ),
             TextField(
               onChanged: (value) {
-                //Do something with the user input.
+                name = value;
               },
               decoration: buildInputDecoration(),
             ),
@@ -54,7 +58,7 @@ class _RegisterState extends State<Register> {
             ),
             TextField(
               onChanged: (value) {
-                //Do something with the user input.
+                username = value;
               },
               decoration: buildInputDecoration(),
             ),
@@ -69,7 +73,7 @@ class _RegisterState extends State<Register> {
             TextField(
               obscureText: true,
               onChanged: (value) {
-                //Do something with the user input.
+                password = value;
               },
               decoration: buildInputDecoration(),
             ),
@@ -82,8 +86,9 @@ class _RegisterState extends State<Register> {
               child: Text("Email"),
             ),
             TextField(
+              keyboardType: TextInputType.emailAddress,
               onChanged: (value) {
-                //Do something with the user input.
+                email = value;
               },
               decoration: buildInputDecoration(),
             ),
@@ -97,8 +102,17 @@ class _RegisterState extends State<Register> {
                 borderRadius: BorderRadius.all(Radius.circular(30.0)),
                 elevation: 5.0,
                 child: MaterialButton(
-                  onPressed: () {
-                    //Implement login functionality.
+                  onPressed: () async {
+                    try {
+                      final newUser =
+                          await _auth.createUserWithEmailAndPassword(
+                              email: email, password: password);
+                      if (newUser != null) {
+                        Navigator.pushNamed(context, "/");
+                      }
+                    } catch (e) {
+                      print(e); //error popup alert check qnbank
+                    }
                   },
                   minWidth: 200.0,
                   height: 42.0,

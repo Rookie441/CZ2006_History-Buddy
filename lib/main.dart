@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'homepage.dart';
 import 'mainmenu.dart';
-import 'login.dart';
 import 'register.dart';
+import "package:firebase_core/firebase_core.dart";
 
-void main() => runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
@@ -14,7 +18,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => MainMenu(),
-        '/login': (context) => Login(), //login
+        '/homepage': (context) => HomePage(),
         '/register': (context) => Register(), //register
       },
     );
