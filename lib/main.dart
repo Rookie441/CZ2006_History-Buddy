@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => MainMenu(),
         '/homepage': (context) => HomePage(),
-        '/register': (context) => Register(), //register
+        '/register': (context) => Register(),
       },
     );
   }

@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import "constants.dart";
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
 class MainMenu extends StatefulWidget {
@@ -51,24 +53,7 @@ class _MainMenuState extends State<MainMenu> {
               onChanged: (value) {
                 email = value;
               },
-              decoration: InputDecoration(
-                hintText: 'Enter your email',
-                contentPadding:
-                    EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: Colors.lightBlueAccent, width: 1.0),
-                  borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: Colors.lightBlueAccent, width: 2.0),
-                  borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                ),
-              ),
+              decoration: buildInputDecoration("Enter your email."),
             ),
             SizedBox(
               height: 8.0,
@@ -79,24 +64,7 @@ class _MainMenuState extends State<MainMenu> {
               onChanged: (value) {
                 password = value;
               },
-              decoration: InputDecoration(
-                hintText: 'Enter your password.',
-                contentPadding:
-                    EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: Colors.lightBlueAccent, width: 1.0),
-                  borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: Colors.lightBlueAccent, width: 2.0),
-                  borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                ),
-              ),
+              decoration: buildInputDecoration("Enter your password."),
             ),
             SizedBox(
               height: 10.0,
@@ -116,7 +84,16 @@ class _MainMenuState extends State<MainMenu> {
                         Navigator.pushNamed(context, "/homepage");
                       }
                     } catch (e) {
-                      print(e);
+                      // Show error alert using string slicing of in-built error msg
+                      String error = e.toString();
+                      int index = error.indexOf("]");
+                      String error_type = error.substring(1, index);
+                      String error_msg = error.substring(index + 1);
+                      Alert(
+                              context: context,
+                              title: error_type,
+                              desc: error_msg)
+                          .show();
                     }
                   },
                   minWidth: 200.0,

@@ -40,8 +40,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Colors.white70,
       appBar: AppBar(
-        automaticallyImplyLeading:
-            false, //prevents accidental backtracking, implement logout button instead
+        automaticallyImplyLeading: false, //prevents accidental backtracking
         backgroundColor: Colors.blue[900],
         title: Text('HomePage'),
         actions: [
@@ -50,7 +49,6 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(
                     color: Colors.white54, backgroundColor: Colors.blue[900])),
             onPressed: () {
-              // todo: add a warning to user if they want to logout
               Alert(
                 context: context,
                 title: "Confirmation",
