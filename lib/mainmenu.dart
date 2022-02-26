@@ -2,8 +2,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import "constants.dart";
+import "package:cloud_firestore/cloud_firestore.dart";
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+
+final _firestore = FirebaseFirestore.instance;
 
 class MainMenu extends StatefulWidget {
   @override
@@ -12,121 +15,124 @@ class MainMenu extends StatefulWidget {
 
 class _MainMenuState extends State<MainMenu> {
   final _auth = FirebaseAuth.instance;
-  late String email;
+  late String login_details;
   late String password;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //resizeToAvoidBottomInset: false, //use flexible widgets instead
       backgroundColor: Colors.white,
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          //mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            SizedBox(
-              height: 20.0,
-            ),
-            Text(
-              "History Buddy",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 45.0,
-                fontFamily: 'Pacifico',
-                fontWeight: FontWeight.w900,
+        child: SingleChildScrollView(
+          child: Column(
+            //mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              SizedBox(
+                height: 20.0,
               ),
-            ),
-            Flexible(
-              child: Container(
+              Text(
+                "History Buddy",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 45.0,
+                  fontFamily: 'Pacifico',
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Container(
                 height: 200.0,
                 child: Image.asset('images/Logo.png'),
               ),
-            ),
-            SizedBox(
-              height: 24.0,
-            ),
-            TextField(
-              keyboardType: TextInputType.emailAddress,
-              textAlign: TextAlign.center,
-              onChanged: (value) {
-                email = value;
-              },
-              decoration: buildInputDecoration("Enter your email."),
-            ),
-            SizedBox(
-              height: 8.0,
-            ),
-            TextField(
-              textAlign: TextAlign.center,
-              obscureText: true,
-              onChanged: (value) {
-                password = value;
-              },
-              decoration: buildInputDecoration("Enter your password."),
-            ),
-            SizedBox(
-              height: 10.0,
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.0),
-              child: Material(
-                color: Colors.lightBlueAccent,
-                borderRadius: BorderRadius.all(Radius.circular(30.0)),
-                elevation: 5.0,
-                child: MaterialButton(
-                  onPressed: () async {
-                    try {
-                      final user = await _auth.signInWithEmailAndPassword(
-                          email: email, password: password);
-                      if (user != null) {
-                        Navigator.pushNamed(context, "/homepage");
+              SizedBox(
+                height: 24.0,
+              ),
+              TextField(
+                keyboardType: TextInputType.emailAddress,
+                textAlign: TextAlign.center,
+                onChanged: (value) {
+                  login_details = value;
+                },
+                decoration: buildInputDecoration("Enter your username/email"),
+              ),
+              SizedBox(
+                height: 8.0,
+              ),
+              TextField(
+                textAlign: TextAlign.center,
+                obscureText: true,
+                onChanged: (value) {
+                  password = value;
+                },
+                decoration: buildInputDecoration("Enter your password"),
+              ),
+              SizedBox(
+                height: 10.0,
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                child: Material(
+                  color: Colors.lightBlueAccent,
+                  borderRadius: BorderRadius.all(Radius.circular(30.0)),
+                  elevation: 5.0,
+                  child: MaterialButton(
+                    onPressed: () async {
+                      try {
+                        // Login by Username functionality
+                        await _firestore
+                            .collection('userinfo')
+                            .get()
+                            .then((QuerySnapshot querySnapshot) {
+                          querySnapshot.docs.forEach((doc) {
+                            if (login_details == doc["username"]) {
+                              login_details = doc.id;
+                              return;
+                            }
+                          });
+                        });
+
+                        final user = await _auth.signInWithEmailAndPassword(
+                            email: login_details, password: password);
+                        if (user != null) {
+                          Navigator.pushNamed(context, "/homepage");
+                        }
+                      } catch (e) {
+                        errorAlert(e, context);
                       }
-                    } catch (e) {
-                      // Show error alert using string slicing of in-built error msg
-                      String error = e.toString();
-                      int index = error.indexOf("]");
-                      String error_type = error.substring(1, index);
-                      String error_msg = error.substring(index + 1);
-                      Alert(
-                              context: context,
-                              title: error_type,
-                              desc: error_msg)
-                          .show();
-                    }
-                  },
-                  minWidth: 200.0,
-                  height: 42.0,
-                  child: Text(
-                    'Log In',
+                    },
+                    minWidth: 200.0,
+                    height: 42.0,
+                    child: Text(
+                      'Log In',
+                    ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(
-              height: 10.0,
-            ),
-            Text("Dont have an account?"),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 5.0),
-              child: Material(
-                color: Colors.lightBlueAccent,
-                borderRadius: BorderRadius.all(Radius.circular(30.0)),
-                elevation: 5.0,
-                child: MaterialButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, "/register");
-                  },
-                  minWidth: 200.0,
-                  height: 42.0,
-                  child: Text(
-                    'Register',
+              SizedBox(
+                height: 10.0,
+              ),
+              Text("Dont have an account?"),
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 5.0),
+                child: Material(
+                  color: Colors.lightBlueAccent,
+                  borderRadius: BorderRadius.all(Radius.circular(30.0)),
+                  elevation: 5.0,
+                  child: MaterialButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, "/register");
+                    },
+                    minWidth: 200.0,
+                    height: 42.0,
+                    child: Text(
+                      'Register',
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

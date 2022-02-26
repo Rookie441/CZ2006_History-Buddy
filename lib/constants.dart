@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import "package:rflutter_alert/rflutter_alert.dart";
 
 InputDecoration buildInputDecoration(String hintText) {
   return InputDecoration(
     hintText: hintText,
+    hintStyle: TextStyle(fontSize: 15.0, color: Colors.grey),
     contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.all(Radius.circular(32.0)),
@@ -24,3 +26,26 @@ const kHeadingTextStyle = TextStyle(
   fontFamily: 'SourceSansPro',
   fontWeight: FontWeight.bold,
 );
+
+void errorAlert(e, context) {
+  String error_type = "Unknown Error";
+  String error_msg = "Unhandled Exception";
+  String error = e.toString();
+  int start = 0;
+  int index = error.indexOf(":");
+  if (index == -1) {
+    index = error.indexOf("]");
+    start = error.indexOf("/") + 1;
+  }
+
+  error_type = error.substring(start, index);
+  error_msg = error.substring(index + 1);
+
+  // Since username login is implemented, edit error msg
+  if (error_type == "invalid-email" || error_type == "user-not-found") {
+    error_type = "Invalid email or username";
+    error_msg = "Please try again";
+  }
+
+  Alert(context: context, title: error_type, desc: error_msg).show();
+}
