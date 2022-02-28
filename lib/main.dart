@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'homepage.dart';
-import 'mainmenu.dart';
-import 'register.dart';
+import 'pages/mainmenu.dart';
+import 'pages/login.dart';
+import 'pages/register.dart';
 import "package:firebase_core/firebase_core.dart";
 
 void main() async {
@@ -17,8 +17,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context) => MainMenu(),
-        '/homepage': (context) => HomePage(),
+        '/': (context) => LoginPage(),
+        '/mainmenu': (context) => MainMenu(),
         '/register': (context) => Register(),
       },
     );

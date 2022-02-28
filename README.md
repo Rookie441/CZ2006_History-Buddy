@@ -2,6 +2,13 @@
 CZ2006 Software Engineering Project by "APIHunter"
 
 ## Changelog
+Version 1.3: [Watch Demo](https://user-images.githubusercontent.com/68913871/155989356-f33e4ced-5458-4d3f-ae8a-d344a5f3d86e.mp4)
+- Implemented Modal Progress HUD Spinner for login and register functionality
+- File renaming and directory organization
+- Created BottomNavigatorBar in mainmenu.dart with 3 selectable screens: Home, Friends, Leaderboard
+- Basic Friends page (no functionality)
+- Basic Leaderboard page (no functionality)
+
 Version 1.2: [Watch Demo](https://user-images.githubusercontent.com/68913871/155840125-cc3da3f2-f93c-44f6-b937-81b8902e43ac.mp4)
 - Created database collection "userinfo" with email as documentName and fields: name, username
 - Added character limit counter and hint text for input fields in registration.dart
@@ -37,10 +44,7 @@ Version 1.0: [Watch Demo](https://user-images.githubusercontent.com/68913871/154
 - Fix pixel overflow when keyboard appears in mainmenu and register
 
 ## To-do:
-- Implement Modal Progress HUD Spinner
-- Friends page
 - Friends functionality (add, remove, request, accept)
-- Leaderboard page
 - Adaptive leaderboard based on calories and datetime
 
 ## Improvements/Considerations:

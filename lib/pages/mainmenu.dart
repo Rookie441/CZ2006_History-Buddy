@@ -1,22 +1,39 @@
 import 'package:flutter/material.dart';
-import 'constants.dart';
+import '../constants.dart';
 import "package:firebase_auth/firebase_auth.dart";
 import "package:cloud_firestore/cloud_firestore.dart";
 import 'package:rflutter_alert/rflutter_alert.dart';
+import '../screens/home.dart';
+import '../screens/friends.dart';
+import '../screens/leaderboard.dart';
 
 final _firestore = FirebaseFirestore.instance;
 
-class HomePage extends StatefulWidget {
+class MainMenu extends StatefulWidget {
   @override
-  _HomePageState createState() => _HomePageState();
+  _MainMenuState createState() => _MainMenuState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _MainMenuState extends State<MainMenu> {
   final _auth = FirebaseAuth.instance;
   late User loggedInUser;
   String username = "";
   int calories = 100;
-  int highscore = 0;
+
+  int _selectedIndex = 0;
+  static const TextStyle optionStyle =
+      TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
+  static List<Widget> _widgetOptions = <Widget>[
+    homePage(),
+    friendsPage(),
+    leaderboardPage(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   void initState() {
@@ -100,44 +117,26 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             body: Center(
-              child: Column(
-                children: <Widget>[
-                  Row(
-                    children: [
-                      Text(
-                        'Calories: $calories',
-                        style: kHeadingTextStyle,
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        'Highscore: $highscore',
-                        style: kHeadingTextStyle,
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: 100.0,
-                  ),
-                  CircleAvatar(
-                    radius: 100.0,
-                    backgroundImage: AssetImage("images/Logo.png"),
-                  ),
-                  RaisedButton(
-                    color: Colors.red,
-                    child: Column(
-                      children: [
-                        Text('Play'),
-                      ],
-                    ),
-                    onPressed: () {
-                      print("pressed");
-                    },
-                  ),
-                ],
-              ),
+              child: _widgetOptions.elementAt(_selectedIndex),
+            ),
+            bottomNavigationBar: BottomNavigationBar(
+              items: const <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.group),
+                  label: 'Friends',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.leaderboard),
+                  label: 'Leaderboard',
+                ),
+              ],
+              currentIndex: _selectedIndex,
+              selectedItemColor: Colors.amber[800],
+              onTap: _onItemTapped,
             ),
           );
         });
