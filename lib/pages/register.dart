@@ -153,7 +153,6 @@ class _RegisterState extends State<Register> {
                             querySnapshot.docs.forEach((doc) {
                               if (username == doc["username"]) {
                                 taken = true;
-                                return;
                               }
                             });
                           });
@@ -173,6 +172,8 @@ class _RegisterState extends State<Register> {
                             _firestore.collection('userinfo').doc(email).set({
                               'name': name,
                               'username': username,
+                              'friends': [],
+                              'requests': [],
                               //'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch, //Date of account creation
                             });
 

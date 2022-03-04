@@ -11,13 +11,13 @@ final _firestore = FirebaseFirestore.instance;
 
 class MainMenu extends StatefulWidget {
   @override
-  _MainMenuState createState() => _MainMenuState();
+  MainMenuState createState() => MainMenuState();
 }
 
-class _MainMenuState extends State<MainMenu> {
+class MainMenuState extends State<MainMenu> {
   final _auth = FirebaseAuth.instance;
-  late User loggedInUser;
-  String username = "";
+  static late User loggedInUser;
+  static String username = "";
   int calories = 100;
 
   int _selectedIndex = 0;
@@ -69,7 +69,7 @@ class _MainMenuState extends State<MainMenu> {
 
   @override
   Widget build(BuildContext context) {
-    //future builder is used to modify appBar title after info is being gathered from database
+    //future builder is used to modify appBar title after info is being gathered from database (detailed explanation can be found in friends.dart)
     return FutureBuilder<String>(
         future: getInfo(),
         builder: (context, snapshot) {

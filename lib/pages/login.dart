@@ -88,6 +88,7 @@ class _LoginPageState extends State<LoginPage> {
                         });
                         try {
                           // Login by Username functionality
+
                           await _firestore
                               .collection('userinfo')
                               .get()
@@ -95,7 +96,6 @@ class _LoginPageState extends State<LoginPage> {
                             querySnapshot.docs.forEach((doc) {
                               if (login_details == doc["username"]) {
                                 login_details = doc.id;
-                                return;
                               }
                             });
                           });
