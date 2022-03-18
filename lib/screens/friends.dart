@@ -17,17 +17,22 @@ class _friendsPageState extends State<friendsPage> {
   String email = MainMenuState.loggedInUser.email.toString();
   String username = MainMenuState.username.toString();
 
-  late String friendUsername;
-  late String friendEmail;
-
+  // Belongs to current user
   List<String> friendList = [];
   List<String> requestList = [];
 
-  var txtController = TextEditingController();
+  // For adding friend functionality
+  late String friendUsername;
+  late String friendEmail;
+
+  // Get real name of requesting friend and current friends to be displayed below username
+  var friendNameList = {};
+  var requestNameList = {};
+
+  var txtController = TextEditingController(); // For clearing text field
 
   Future<void> getFriendList() async {
     List<String> friendList = [];
-    // todo: wrap in try block
     await _firestore
         .collection('userinfo')
         .get()
@@ -41,11 +46,11 @@ class _friendsPageState extends State<friendsPage> {
       });
     });
     this.friendList = friendList;
+    setState(() {});
   }
 
   Future<void> getRequestList() async {
     List<String> requestList = [];
-    // todo: wrap in try block
     await _firestore
         .collection('userinfo')
         .get()
@@ -59,6 +64,33 @@ class _friendsPageState extends State<friendsPage> {
       });
     });
     this.requestList = requestList;
+    setState(() {});
+  }
+
+  // Get real name of requesting friend and current friends to be displayed below username
+  Future<void> getFriendNameList() async {
+    var friendNameList = Map();
+    var requestNameList = Map();
+    await _firestore
+        .collection('userinfo')
+        .get()
+        .then((QuerySnapshot querySnapshot) {
+      querySnapshot.docs.forEach((doc) {
+        for (String friendUsername in friendList) {
+          if (friendUsername == doc["username"]) {
+            friendNameList[friendUsername] = doc["name"];
+          }
+        }
+        for (String friendUsername in requestList) {
+          if (friendUsername == doc["username"]) {
+            requestNameList[friendUsername] = doc["name"];
+          }
+        }
+      });
+    });
+    this.friendNameList = friendNameList;
+    this.requestNameList = requestNameList;
+    setState(() {});
   }
 
   @override
@@ -70,109 +102,133 @@ class _friendsPageState extends State<friendsPage> {
         future: Future.wait([
           getFriendList(),
           getRequestList(),
+          getFriendNameList(),
         ]), //multiple futures to wait for
         builder: (context, snapshot) {
           return Scaffold(
+            resizeToAvoidBottomInset:
+                false, //also include this in home.dart because bottom navigation bar will cause pixel overflow
             backgroundColor: Colors.white70,
             body: Center(
               child: Column(
                 children: <Widget>[
-                  Row(
-                    children: [
-                      Text(
-                        'Requests:',
-                        style: kHeadingTextStyle,
-                      ),
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0, top: 8.0),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Requests: ',
+                          style: kHeadingTextStyle,
+                        ),
+                      ],
+                    ),
                   ),
-                  //todo: cannot print request usernames together since need to accept/reject specific request. Add each button beside name (+/-)
-                  Row(
-                    children: [
-                      Text(
-                        requestList.toString(),
-                        style: kHeadingTextStyle,
-                      ),
-                    ],
-                  ),
-
-                  Row(
-                    children: [
-                      RaisedButton(
-                          color: Colors.green,
-                          child: Column(
-                            children: [
-                              Text('Accept'),
-                            ],
+                  Container(
+                    height: 75, //show 1 request per view, scrollable
+                    child: ListView(
+                      shrinkWrap: true, //only occupies the space it needs
+                      children: [
+                        for (var friend in requestList)
+                          ListTile(
+                            onTap: () async {
+                              Alert(
+                                context: context,
+                                title: "Friend Request",
+                                desc: "$friend has requested to be friends",
+                                buttons: [
+                                  DialogButton(
+                                    child: Text(
+                                      "Accept",
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 20),
+                                    ),
+                                    onPressed: () async {
+                                      //update my request
+                                      List<String> newRequest = [];
+                                      newRequest.add(friend);
+                                      _firestore
+                                          .collection('userinfo')
+                                          .doc(email)
+                                          .update({
+                                        "requests":
+                                            FieldValue.arrayRemove(newRequest)
+                                      });
+                                      getRequestList();
+                                      //update my friends
+                                      List<String> newFriend = [];
+                                      newFriend.add(friend);
+                                      _firestore
+                                          .collection('userinfo')
+                                          .doc(email)
+                                          .update({
+                                        "friends":
+                                            FieldValue.arrayUnion(newFriend)
+                                      });
+                                      getFriendList();
+                                      setState(() {});
+                                      //update his friends
+                                      await _firestore
+                                          .collection('userinfo')
+                                          .get()
+                                          .then((QuerySnapshot querySnapshot) {
+                                        querySnapshot.docs.forEach((doc) {
+                                          if (friend == doc["username"]) {
+                                            String newFriendEmail = doc.id;
+                                            List<String> newFriend = [];
+                                            newFriend.add(username);
+                                            _firestore
+                                                .collection('userinfo')
+                                                .doc(newFriendEmail)
+                                                .update({
+                                              "friends": FieldValue.arrayUnion(
+                                                  newFriend)
+                                            });
+                                          }
+                                        });
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                  ),
+                                  DialogButton(
+                                    child: Text(
+                                      "Reject",
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 20),
+                                    ),
+                                    onPressed: () {
+                                      //remove my request
+                                      for (String request in requestList) {
+                                        //update my request
+                                        List<String> newRequest = [];
+                                        newRequest.add(request);
+                                        _firestore
+                                            .collection('userinfo')
+                                            .doc(email)
+                                            .update({
+                                          "requests":
+                                              FieldValue.arrayRemove(newRequest)
+                                        });
+                                        getRequestList();
+                                        setState(() {});
+                                      }
+                                      Navigator.pop(context);
+                                    },
+                                  )
+                                ],
+                              ).show();
+                            },
+                            leading: CircleAvatar(
+                              backgroundImage: AssetImage("images/Avatar.png"),
+                            ),
+                            title: Text(friend),
+                            //ternary operator introduced because widget may attempt creation before requestNameList is updated (may be null) -> Forced a setstate for all get functions but implemented just in case
+                            subtitle: requestNameList[friend] != null
+                                //Real name displayed here
+                                ? Text(requestNameList[friend])
+                                : Text(""),
                           ),
-                          onPressed: () async {
-                            for (String request in requestList) {
-                              //update my request
-                              List<String> newRequest = [];
-                              newRequest.add(request);
-                              _firestore
-                                  .collection('userinfo')
-                                  .doc(email)
-                                  .update({
-                                "requests": FieldValue.arrayRemove(newRequest)
-                              });
-                              getRequestList();
-                              //update my friends
-                              List<String> newFriend = [];
-                              newFriend.add(request);
-                              _firestore
-                                  .collection('userinfo')
-                                  .doc(email)
-                                  .update({
-                                "friends": FieldValue.arrayUnion(newFriend)
-                              });
-                              getFriendList();
-                              setState(() {});
-                              //update his friends
-                              await _firestore
-                                  .collection('userinfo')
-                                  .get()
-                                  .then((QuerySnapshot querySnapshot) {
-                                querySnapshot.docs.forEach((doc) {
-                                  if (request == doc["username"]) {
-                                    String newFriendEmail = doc.id;
-                                    List<String> newFriend = [];
-                                    newFriend.add(username);
-                                    _firestore
-                                        .collection('userinfo')
-                                        .doc(newFriendEmail)
-                                        .update({
-                                      "friends":
-                                          FieldValue.arrayUnion(newFriend)
-                                    });
-                                  }
-                                });
-                              });
-                            }
-                          }),
-                      RaisedButton(
-                          color: Colors.red,
-                          child: Column(
-                            children: [
-                              Text('Reject'),
-                            ],
-                          ),
-                          onPressed: () {
-                            //remove my request
-                            for (String request in requestList) {
-                              //update my request
-                              List<String> newRequest = [];
-                              newRequest.add(request);
-                              _firestore
-                                  .collection('userinfo')
-                                  .doc(email)
-                                  .update({
-                                "requests": FieldValue.arrayRemove(newRequest)
-                              });
-                              getRequestList();
-                              setState(() {});
-                            }
-                          }),
-                    ],
+                      ],
+                    ),
                   ),
                   SizedBox(
                     height: 24.0,
@@ -264,21 +320,97 @@ class _friendsPageState extends State<friendsPage> {
                   SizedBox(
                     height: 12.0,
                   ),
-                  Row(
-                    children: [
-                      Text(
-                        'Friends:',
-                        style: kHeadingTextStyle,
-                      ),
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Friends: ${friendList.length}', // Display total number of friends
+                          style: kHeadingTextStyle,
+                        ),
+                      ],
+                    ),
                   ),
-                  Row(
-                    children: [
-                      Text(
-                        friendList.toString(),
-                        style: kHeadingTextStyle,
-                      ),
-                    ],
+                  Expanded(
+                    //show around 4 friend per view, scrollable
+                    child: ListView(
+                      shrinkWrap: true, //only occupies the space it needs
+                      children: [
+                        for (var friend in friendList)
+                          ListTile(
+                            onTap: () async {
+                              Alert(
+                                context: context,
+                                title: "Remove Friend",
+                                desc: "Remove $friend from friend list?",
+                                buttons: [
+                                  DialogButton(
+                                    child: Text(
+                                      "Yes",
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 20),
+                                    ),
+                                    onPressed: () async {
+                                      //update my friends
+                                      List<String> removeFriend = [];
+                                      removeFriend.add(friend);
+                                      _firestore
+                                          .collection('userinfo')
+                                          .doc(email)
+                                          .update({
+                                        "friends":
+                                            FieldValue.arrayRemove(removeFriend)
+                                      });
+                                      getFriendList();
+                                      setState(() {});
+                                      //update his friends
+                                      await _firestore
+                                          .collection('userinfo')
+                                          .get()
+                                          .then((QuerySnapshot querySnapshot) {
+                                        querySnapshot.docs.forEach((doc) {
+                                          if (friend == doc["username"]) {
+                                            String removeFriendEmail = doc.id;
+                                            List<String> removeFriend = [];
+                                            removeFriend.add(username);
+                                            _firestore
+                                                .collection('userinfo')
+                                                .doc(removeFriendEmail)
+                                                .update({
+                                              "friends": FieldValue.arrayRemove(
+                                                  removeFriend)
+                                            });
+                                          }
+                                        });
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                  ),
+                                  DialogButton(
+                                    child: Text(
+                                      "No",
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 20),
+                                    ),
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                  ),
+                                ],
+                              ).show();
+                            },
+                            leading: CircleAvatar(
+                              backgroundImage: AssetImage("images/Avatar.png"),
+                            ),
+                            title: Text(friend),
+                            //ternary operator introduced because widget may attempt creation before friendNameList is updated (may be null) -> Forced a setstate for all get functions but implemented just in case
+                            subtitle: friendNameList[friend] != null
+                                //Real name displayed here
+                                ? Text(friendNameList[friend])
+                                : Text(""),
+                          ),
+                      ],
+                    ),
                   ),
                 ],
               ),

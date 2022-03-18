@@ -2,6 +2,11 @@
 CZ2006 Software Engineering Project by "APIHunter"
 
 ## Changelog
+Version 1.5: [Watch Demo](https://user-images.githubusercontent.com/68913871/159002749-0b6996c3-9691-4ad4-9da8-5161a813cfd9.mp4)
+- Improve friends page UI: non-text widget, buttons, counter, scrollable etc.
+- Friends functionality (accept/reject specific friend request)
+- Friends functionality (remove specific existing friend)
+
 Version 1.4: [Watch Demo](https://user-images.githubusercontent.com/68913871/156759378-dbfb66f8-ef9e-4dad-b8e1-6263d73b68f5.mp4)
 - Added 2 more fields in userinfo database: friends, requests (lists of usernames, initialize empty)
 - Changed MainMenu from private to public class, changed username and loggedInUser to static variables (for other screens to access)
@@ -52,10 +57,8 @@ Version 1.0: [Watch Demo](https://user-images.githubusercontent.com/68913871/154
 - Fix pixel overflow when keyboard appears in mainmenu and register
 
 ## To-do:
-- Improve friends page UI: non-text widget, buttons, counter, scrollable etc.
-- Friends functionality (accept/reject specific friend request)
-- Friends functionality (remove specific existing friend)
 - Adaptive leaderboard based on calories and datetime
+- Historical sites API integration
 
 ## Improvements/Considerations:
 - Ability to cancel outgoing friend request (Additional Use Case)
