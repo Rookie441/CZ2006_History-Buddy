@@ -57,7 +57,7 @@ class _RegisterState extends State<Register> {
                   keyboardType: TextInputType.visiblePassword,
                   inputFormatters: [
                     //LengthLimitingTextInputFormatter(30), //Length limit without counter
-                    new WhitelistingTextInputFormatter(RegExp("[a-zA-Z '.-/]")),
+                    new FilteringTextInputFormatter(RegExp("[a-zA-Z '.-/]"), allow: true),
                   ],
                   onChanged: (value) {
                     name = value;
@@ -73,7 +73,7 @@ class _RegisterState extends State<Register> {
                   maxLength: 30,
                   keyboardType: TextInputType.visiblePassword,
                   inputFormatters: [
-                    new WhitelistingTextInputFormatter(RegExp("[a-zA-Z0-9._]")),
+                    new FilteringTextInputFormatter(RegExp("[a-zA-Z0-9._]"), allow: true),
                   ],
                   onChanged: (value) {
                     username = value;
@@ -102,7 +102,7 @@ class _RegisterState extends State<Register> {
                   maxLength: 320,
                   keyboardType: TextInputType.emailAddress,
                   inputFormatters: [
-                    new WhitelistingTextInputFormatter(RegExp("[^ ]")),
+                    new FilteringTextInputFormatter(RegExp("[^ ]"), allow: true),
                   ],
                   onChanged: (value) {
                     email = value;

@@ -6,6 +6,7 @@ import 'package:rflutter_alert/rflutter_alert.dart';
 import '../screens/home.dart';
 import '../screens/friends.dart';
 import '../screens/leaderboard.dart';
+import '../screens/historicalsite.dart';
 
 final _firestore = FirebaseFirestore.instance;
 
@@ -27,6 +28,7 @@ class MainMenuState extends State<MainMenu> {
     homePage(),
     friendsPage(),
     leaderboardPage(),
+    historicalsite()
   ];
 
   void _onItemTapped(int index) {
@@ -122,16 +124,20 @@ class MainMenuState extends State<MainMenu> {
             bottomNavigationBar: BottomNavigationBar(
               items: const <BottomNavigationBarItem>[
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.home),
+                  icon: Icon(Icons.home, color: Colors.black),
                   label: 'Home',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.group),
+                  icon: Icon(Icons.group, color: Colors.black),
                   label: 'Friends',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.leaderboard),
+                  icon: Icon(Icons.leaderboard, color: Colors.black),
                   label: 'Leaderboard',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.hiking, color: Colors.black),
+                  label: 'Historical Sites',
                 ),
               ],
               currentIndex: _selectedIndex,

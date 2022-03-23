@@ -182,8 +182,8 @@ class _friendsPageState extends State<friendsPage> {
                     maxLength: 30,
                     keyboardType: TextInputType.visiblePassword,
                     inputFormatters: [
-                      new WhitelistingTextInputFormatter(
-                          RegExp("[a-zA-Z0-9._]")),
+                      new FilteringTextInputFormatter(
+                          RegExp("[a-zA-Z0-9._]"), allow: true),
                     ],
                     onChanged: (value) {
                       friendUsername = value;
