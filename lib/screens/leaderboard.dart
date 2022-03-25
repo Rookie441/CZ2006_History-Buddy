@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 
 class leaderboardPage extends StatefulWidget {
   @override
@@ -10,28 +11,32 @@ class _leaderboardPageState extends State<leaderboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white70,
-      body: Center(
-        child: Column(
+      backgroundColor: Colors.brown[200],
+      body: RefreshIndicator(
+        onRefresh: () async {
+          setState(() {});
+        },
+        child: ListView(
           children: <Widget>[
-            Row(
-              children: [
+            Column(
+              children: const [
                 Text(
-                  'Leaderboard:',
-                  style: kHeadingTextStyle,
+                  "Leaderboard",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 30.0,
+                    fontFamily: 'Pacifico',
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Divider(
+                  color: Colors.black,
+                  height: 15,
+                  thickness: 2,
+                  indent: 5,
+                  endIndent: 5,
                 ),
               ],
-            ),
-            RaisedButton(
-              color: Colors.green,
-              child: Column(
-                children: [
-                  Text('Refresh'),
-                ],
-              ),
-              onPressed: () {
-                print("pressed");
-              },
             ),
           ],
         ),
