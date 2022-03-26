@@ -8,6 +8,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:history_buddy/sitesData.dart';
 import 'package:history_buddy/HistSite.dart';
 import 'package:loading_gifs/loading_gifs.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:history_buddy/screens/reviews_page.dart';
 
 /// to do: fix the range exception issue
 /// add images to each historical site if possible
@@ -100,7 +102,7 @@ class _historicalsiteState extends State<historicalsite> {
   // create list of historical sites
   // sort the list by distance from user's location
 
-  void asyncLoad() async {
+  asyncLoad() async {
     final geo = GeoJson();
     final String s = await DefaultAssetBundle.of(context).loadString(
         'assets/historic-sites-geojson.geojson');
@@ -116,13 +118,10 @@ class _historicalsiteState extends State<historicalsite> {
       var stop_imgindex = info.indexOf(r"<",start_imgindex);
       String img = info.substring(start_imgindex, stop_imgindex);
       String img_url = "https://roots.sg/~/media/"+img.replaceAll("\/", "/");
-    //  print(img_url);
       HistSiteImg.add(img_url);
-      print(HistSiteImg.length);
-      print(historicalsite.sortedHistSites.length);
     }
-
   }
+
 
   // initialise the state of the UI
   // call asyncLoad function to initialise the historical sites data
@@ -161,15 +160,48 @@ class _historicalsiteState extends State<historicalsite> {
                 leading: FadeInImage(
                   image: NetworkImage(HistSiteImg[index]),
                   placeholder: AssetImage('images/Logo.png'),
+                  width: 100,
                   imageErrorBuilder:
                   (context, error, stackTrace){
                     return Image.asset('images/Logo.png',
-                    fit: BoxFit.fitWidth);
+                    width: 100,);
                   },
                 ),
                 title: Text(historicalsite.sortedHistSites[index].getName()),
-                subtitle: Text(historicalsite.sortedHistSites[index].getDesc()),
-
+                subtitle: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Flexible(
+                      child: Text(historicalsite.sortedHistSites[index].getDesc(),
+                      maxLines: 3,
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                    //Padding(
+                      //padding: EdgeInsets.only(top: 8.0),
+                      //child: <Widget>[
+                        //starWidget(),
+                      //],
+                   // )
+                    FlatButton(
+                      child: const Text(
+                        'REVIEWS',
+                        style: TextStyle(
+                          color: Colors.purple,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => ReviewsPage(histsite: historicalsite.sortedHistSites[index]),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               );
             }
 
