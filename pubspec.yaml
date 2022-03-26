@@ -27,6 +27,7 @@ dependencies:
   geolocator: ^8.2.0
   google_maps_flutter: ^2.1.2
   http: ^0.13.0
+  loading_gifs: ^0.3.0
 
 
 

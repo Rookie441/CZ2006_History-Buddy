@@ -2,13 +2,15 @@ class HistSite {
   late String _siteName, _description;
   double _lat = -1, _lng = -1;
   double _distfromuser = 0;
+  int _index =0;
   //class constructor
-  HistSite(String siteName, double lat, double lng, String description, double distancefromuser) {
+  HistSite(String siteName, double lat, double lng, String description, double distancefromuser, int index) {
     _siteName = siteName;
     _lat = lat;
     _lng = lng;
     _description = description;
     _distfromuser = distancefromuser;
+    _index = index;
   }
  // HistSite(){
 //    this._siteName;
@@ -30,6 +32,12 @@ class HistSite {
   }
   double getDist(){
     return this._distfromuser;
+  }
+  void setIndex(int i){
+    this._index = i;
+  }
+  int getIndex(){
+    return this._index;
   }
   List<double> getCoordinates() {
     return [_lat, _lng];
