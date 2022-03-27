@@ -7,6 +7,8 @@
    <application
         android:label="history_buddy"
         android:icon="@mipmap/ic_launcher">
+       <meta-data android:name="com.google.android.geo.API_KEY"
+           android:value="AIzaSyATZS0WQHayF6ESKAAXSoZDeH2NG942ZqQ"/>
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
