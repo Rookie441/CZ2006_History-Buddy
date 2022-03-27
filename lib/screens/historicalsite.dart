@@ -23,12 +23,11 @@ class historicalsite extends StatefulWidget {
 
 class _historicalsiteState extends State<historicalsite> {
   @override
-
   // initialise list of HistSite objects to store data
 
   List<HistSite> HistSiteList = [];
   List<String> HistSiteImg = [];
-  readSiteLocations() async {
+  Future readSiteLocations() async {
     final geo = GeoJson();
 
     final String s = await DefaultAssetBundle.of(context)
@@ -67,7 +66,7 @@ class _historicalsiteState extends State<historicalsite> {
     }
   }
 
-  _determinePosition() async {
+  Future _determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
 
@@ -105,7 +104,7 @@ class _historicalsiteState extends State<historicalsite> {
   // create list of historical sites
   // sort the list by distance from user's location
 
-  asyncLoad() async {
+  Future asyncLoad() async {
     final geo = GeoJson();
     final String s = await DefaultAssetBundle.of(context)
         .loadString('assets/historic-sites-geojson.geojson');
@@ -136,80 +135,96 @@ class _historicalsiteState extends State<historicalsite> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: Colors.white70,
-        body: NestedScrollView(
-            floatHeaderSlivers: true,
-            headerSliverBuilder:
-                (BuildContext context, bool innerBoxIsScrolled) {
-              return <Widget>[
-                SliverAppBar(
-                  elevation: 0,
-                  backgroundColor: Colors.teal[200],
-                  title: Text("Historical Sites",
-                      style: TextStyle(fontSize: 22, color: Colors.white)),
-                  centerTitle: true,
-                  expandedHeight: 60.0,
-                  floating: false,
-                  pinned: true,
-                  automaticallyImplyLeading: false,
-                ),
-              ];
-            },
-            body: ListView.builder(
-                itemCount: historicalsite.sortedHistSites.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return ListTile(
-                    leading: FadeInImage(
-                      image: NetworkImage(HistSiteImg[index]),
-                      placeholder: AssetImage('images/Logo.png'),
-                      width: 100,
-                      imageErrorBuilder: (context, error, stackTrace) {
-                        return Image.asset(
-                          'images/Logo.png',
-                          width: 100,
-                        );
-                      },
-                    ),
-                    title:
-                        Text(historicalsite.sortedHistSites[index].getName()),
-                    subtitle: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Flexible(
-                          child: Text(
-                              historicalsite.sortedHistSites[index].getDesc(),
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis),
+    return FutureBuilder(
+        future: Future.wait([
+          asyncLoad(),
+          _determinePosition(),
+          readSiteLocations(),
+        ]), //multiple futures to wait for
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return Scaffold(
+                backgroundColor: Colors.white70,
+                body: NestedScrollView(
+                    floatHeaderSlivers: true,
+                    headerSliverBuilder:
+                        (BuildContext context, bool innerBoxIsScrolled) {
+                      return <Widget>[
+                        SliverAppBar(
+                          elevation: 0,
+                          backgroundColor: Colors.teal[200],
+                          title: Text("Historical Sites",
+                              style:
+                                  TextStyle(fontSize: 22, color: Colors.white)),
+                          centerTitle: true,
+                          expandedHeight: 60.0,
+                          floating: false,
+                          pinned: true,
+                          automaticallyImplyLeading: false,
                         ),
-                        //Padding(
-                        //padding: EdgeInsets.only(top: 8.0),
-                        //child: <Widget>[
-                        //starWidget(),
-                        //],
-                        // )
-                        FlatButton(
-                          child: const Text(
-                            'REVIEWS',
-                            style: TextStyle(
-                                color: Colors.purple,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => ReviewsPage(
-                                    histsite:
-                                        historicalsite.sortedHistSites[index]),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                })));
+                      ];
+                    },
+                    body: ListView.builder(
+                        itemCount: historicalsite.sortedHistSites.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return ListTile(
+                            leading: FadeInImage(
+                              image: NetworkImage(HistSiteImg[index]),
+                              placeholder: AssetImage('images/Logo.png'),
+                              width: 100,
+                              imageErrorBuilder: (context, error, stackTrace) {
+                                return Image.asset(
+                                  'images/Logo.png',
+                                  width: 100,
+                                );
+                              },
+                            ),
+                            title: Text(historicalsite.sortedHistSites[index]
+                                .getName()),
+                            subtitle: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Flexible(
+                                  child: Text(
+                                      historicalsite.sortedHistSites[index]
+                                          .getDesc(),
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis),
+                                ),
+                                //Padding(
+                                //padding: EdgeInsets.only(top: 8.0),
+                                //child: <Widget>[
+                                //starWidget(),
+                                //],
+                                // )
+                                FlatButton(
+                                  child: const Text(
+                                    'REVIEWS',
+                                    style: TextStyle(
+                                        color: Colors.purple,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => ReviewsPage(
+                                            histsite: historicalsite
+                                                .sortedHistSites[index]),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        })));
+          } else {
+            return Scaffold(
+              body: Text("Loading..."),
+            );
+          }
+        });
   }
 }
