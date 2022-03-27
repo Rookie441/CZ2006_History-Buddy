@@ -25,6 +25,7 @@ class _ReviewFormState extends State<ReviewForm> {
       appBar: AppBar(
         title: Text('Review ${widget.histsite.getName()}'),
         elevation: 0.0,
+        backgroundColor: Colors.teal[200],
       ),
       body: Container(
         padding: EdgeInsets.all(16.0),
@@ -113,7 +114,7 @@ class _ReviewFormState extends State<ReviewForm> {
               padding: const EdgeInsets.all(0.0),
               child: Container(
                 decoration: const BoxDecoration(
-                  color: Colors.blue,
+                  color: Colors.teal,
                 ),
                 padding: const EdgeInsets.all(10.0),
                 child: Row(

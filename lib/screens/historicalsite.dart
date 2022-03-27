@@ -1,19 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../constants.dart';
 import 'package:geojson/geojson.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:history_buddy/sitesData.dart';
 import 'package:history_buddy/HistSite.dart';
-import 'package:loading_gifs/loading_gifs.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:history_buddy/screens/reviews_page.dart';
 
-/// to do: fix the range exception issue
-/// add images to each historical site if possible
-/// add button to link to navigator to open map
 class historicalsite extends StatefulWidget {
   static List<HistSite> sortedHistSites = [];
   static List<GeoJsonPoint> points = [];
@@ -40,7 +32,6 @@ class _historicalsiteState extends State<historicalsite> {
     var searchString = r"<";
     var stop_nameindex = info.indexOf(searchString, name_index + 13);
     String siteName = info.substring(name_index + 14, stop_nameindex);
-    // print(siteName);
     var start_descindex = info.indexOf("DESCRIPTION");
     var searchString1 = r"<";
     var stop_descindex = info.indexOf(searchString1, start_descindex + 20);
@@ -99,6 +90,7 @@ class _historicalsiteState extends State<historicalsite> {
     Position position = await Geolocator.getCurrentPosition();
     return await Geolocator.getCurrentPosition();
   }
+
   // get user's current position
   // load data from geojson file
   // create list of historical sites
@@ -130,7 +122,7 @@ class _historicalsiteState extends State<historicalsite> {
   @override
   void initState() {
     super.initState();
-    asyncLoad();
+   // asyncLoad();
   }
 
   @override
@@ -138,8 +130,6 @@ class _historicalsiteState extends State<historicalsite> {
     return FutureBuilder(
         future: Future.wait([
           asyncLoad(),
-          _determinePosition(),
-          readSiteLocations(),
         ]), //multiple futures to wait for
         builder: (context, snapshot) {
           if (snapshot.hasData) {
