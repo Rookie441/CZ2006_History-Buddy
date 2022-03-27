@@ -147,8 +147,7 @@ class _historicalsiteState extends State<historicalsite> {
                 expandedHeight: 60.0,
                 floating: false,
                 pinned: true,
-
-
+                automaticallyImplyLeading: false,
               ),
             ];
           },
