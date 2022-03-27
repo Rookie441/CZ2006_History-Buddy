@@ -10,6 +10,7 @@ import 'package:history_buddy/HistSite.dart';
 import 'package:loading_gifs/loading_gifs.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:history_buddy/screens/reviews_page.dart';
+import 'package:history_buddy/screens/step_tracking.dart';
 
 /// to do: fix the range exception issue
 /// add images to each historical site if possible
@@ -198,6 +199,10 @@ class _historicalsiteState extends State<historicalsite> {
                                 //starWidget(),
                                 //],
                                 // )
+                                Row(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
                                 FlatButton(
                                   child: const Text(
                                     'REVIEWS',
@@ -215,6 +220,26 @@ class _historicalsiteState extends State<historicalsite> {
                                       ),
                                     );
                                   },
+                                ),
+                                FlatButton(
+                                  child: const Text(
+                                    'TRACK STEPS',
+                                    style: TextStyle(
+                                        color: Colors.purple,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => StepTracking(
+                                            histsite: historicalsite
+                                                .sortedHistSites[index]),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                ],
                                 ),
                               ],
                             ),
