@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:history_buddy/HistSite.dart';
-
+import 'package:history_buddy/screens/step_counter.dart';
 
 class StepTracking extends StatefulWidget {
   const StepTracking({Key? key,required this.histsite}) : super(key: key);
@@ -49,12 +49,21 @@ class _StepTrackingState extends State<StepTracking> {
       return MaterialApp(
         home: Scaffold(
           appBar: AppBar(
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
             title: Text(widget.histsite.getName()),
             backgroundColor: Colors.teal[200],
           ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: (){
-              //add pedometer later
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StepCounter(histsite: widget.histsite),
+                  )
+              );
             },
             label : const Text('Start Counting!'),
             backgroundColor: Colors.teal[200],
