@@ -112,10 +112,10 @@ showAlertDialog(BuildContext context) {
       ()async {
     Position position = await _getGeoLocationPosition();
     late m.LatLng _user = m.LatLng(position.latitude, position.longitude);
-    PolygonCoords.add(m.SphericalUtil.computeOffset(_center, 708, 0));
-    PolygonCoords.add(m.SphericalUtil.computeOffset(_center, 708, 90));
-    PolygonCoords.add(m.SphericalUtil.computeOffset(_center, 708, 180));
-    PolygonCoords.add(m.SphericalUtil.computeOffset(_center, 708, 270));
+    PolygonCoords.add(m.SphericalUtil.computeOffset(_center, 708, 45));
+    PolygonCoords.add(m.SphericalUtil.computeOffset(_center, 708, 135));
+    PolygonCoords.add(m.SphericalUtil.computeOffset(_center, 708, 225));
+    PolygonCoords.add(m.SphericalUtil.computeOffset(_center, 708, 315));
     if (!m.PolygonUtil.containsLocation(_user, PolygonCoords, false)) {
 
       // set up the button
