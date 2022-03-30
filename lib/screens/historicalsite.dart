@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:android_intent/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'package:geojson/geojson.dart';
 import 'package:geolocator/geolocator.dart';
@@ -68,7 +69,14 @@ class _historicalsiteState extends State<historicalsite> {
       // Location services are not enabled don't continue
       // accessing the position and request users of the
       // App to enable the location services.
-      return Future.error('Location services are disabled.');
+      try {
+        final AndroidIntent intent = new AndroidIntent(
+          action: 'android.settings.LOCATION_SOURCE_SETTINGS',
+        );
+        await intent.launch();
+      } catch (e) {
+        return Future.error('Location services are disabled.');
+      }
     }
 
     permission = await Geolocator.checkPermission();
@@ -123,7 +131,7 @@ class _historicalsiteState extends State<historicalsite> {
   @override
   void initState() {
     super.initState();
-   // asyncLoad();
+    // asyncLoad();
   }
 
   @override
@@ -190,46 +198,46 @@ class _historicalsiteState extends State<historicalsite> {
                                 //],
                                 // )
                                 Row(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                FlatButton(
-                                  child: const Text(
-                                    'REVIEWS',
-                                    style: TextStyle(
-                                        color: Colors.purple,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => ReviewsPage(
-                                            histsite: historicalsite
-                                                .sortedHistSites[index]),
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    FlatButton(
+                                      child: const Text(
+                                        'REVIEWS',
+                                        style: TextStyle(
+                                            color: Colors.purple,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold),
                                       ),
-                                    );
-                                  },
-                                ),
-                                FlatButton(
-                                  child: const Text(
-                                    'TRACK STEPS',
-                                    style: TextStyle(
-                                        color: Colors.purple,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => StepTracking(
-                                            histsite: historicalsite
-                                                .sortedHistSites[index]),
+                                      onPressed: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => ReviewsPage(
+                                                histsite: historicalsite
+                                                    .sortedHistSites[index]),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    FlatButton(
+                                      child: const Text(
+                                        'TRACK STEPS',
+                                        style: TextStyle(
+                                            color: Colors.purple,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold),
                                       ),
-                                    );
-                                  },
-                                ),
-                                ],
+                                      onPressed: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => StepTracking(
+                                                histsite: historicalsite
+                                                    .sortedHistSites[index]),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
