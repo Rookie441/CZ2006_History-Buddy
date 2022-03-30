@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:history_buddy/sitesData.dart';
 import 'package:history_buddy/HistSite.dart';
 import 'package:history_buddy/screens/reviews_page.dart';
+import 'package:history_buddy/screens/step_tracking.dart';
 
 class historicalsite extends StatefulWidget {
   static List<HistSite> sortedHistSites = [];
@@ -188,6 +189,10 @@ class _historicalsiteState extends State<historicalsite> {
                                 //starWidget(),
                                 //],
                                 // )
+                                Row(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
                                 FlatButton(
                                   child: const Text(
                                     'REVIEWS',
@@ -205,6 +210,26 @@ class _historicalsiteState extends State<historicalsite> {
                                       ),
                                     );
                                   },
+                                ),
+                                FlatButton(
+                                  child: const Text(
+                                    'TRACK STEPS',
+                                    style: TextStyle(
+                                        color: Colors.purple,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => StepTracking(
+                                            histsite: historicalsite
+                                                .sortedHistSites[index]),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                ],
                                 ),
                               ],
                             ),
