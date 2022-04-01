@@ -6,11 +6,7 @@ import 'package:history_buddy/HistSite.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:hive/hive.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import "package:firebase_auth/firebase_auth.dart";
-import '../constants.dart';
-
-
-import '../constants.dart';
+import '../pages/mainmenu.dart';
 
 String formatDate(DateTime d) {
   return d.toString().substring(0, 19);
@@ -30,11 +26,10 @@ class _StepCounterState extends State<StepCounter> {
   late Stream<PedestrianStatus> _pedestrianStatusStream;
   String _status = '?', _steps = '?';
   late int todaySteps;
-  static late User loggedInUser;
   late int quit;
   static int today = 0;
-  final _auth = FirebaseAuth.instance;
-  static String uEmail = "";
+  String Uemail = MainMenuState.loggedInUser.email.toString();
+
 
   void main() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -46,7 +41,6 @@ class _StepCounterState extends State<StepCounter> {
   void initState() {
     super.initState();
     initPlatformState();
-    getCurrentUser();
   }
 
 
@@ -75,8 +69,7 @@ class _StepCounterState extends State<StepCounter> {
   void onStepCountError(error) {
     print('onStepCountError: $error');
     setState(() {
-      _steps = '0';
-      //'Step Count not available';
+      _steps = 'Step Count not available';
     });
   }
 
@@ -99,7 +92,7 @@ class _StepCounterState extends State<StepCounter> {
         .then((QuerySnapshot querySnapshot) {
       querySnapshot.docs.forEach((doc) {
         //this is not expensive
-        if (loggedInUser.email == doc.id.toLowerCase()) {
+        if (Uemail == doc.id.toLowerCase()) {
           quit = doc["quitsteps"];
         }
       });
@@ -107,110 +100,70 @@ class _StepCounterState extends State<StepCounter> {
     return quit;
   }
 
-  Future<String> getEmail() async {
-    await FirebaseFirestore.instance
-        .collection('userinfo')
-        .get()
-        .then((QuerySnapshot querySnapshot) {
-      querySnapshot.docs.forEach((doc) {
-        //this is not expensive
-        if (loggedInUser.email == doc.id.toLowerCase()) {
-          uEmail = doc.id;
-        }
-      });
-    });
-    return uEmail;
-  }
-
-
-  void getCurrentUser() async {
-    try {
-      final user = await _auth.currentUser;
-      if (user != null) {
-        loggedInUser = user;
-      }
-    } catch (e) {
-      errorAlert(e, context); //see constants.dart
-    }
-  }
-
-
 
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-        future: getEmail(),
-        builder: (context, snapshot) {
     return MaterialApp(
-    home: Scaffold(
-    appBar: AppBar(
-    leading: IconButton(
-    icon: Icon(Icons.arrow_back, color: Colors.white),
-    onPressed: () {
-    //FirebaseFirestore.instance.collection('userinfo').doc(
-    //  loggedInUser.email).update(
-    //{'quitsteps': int.parse(_steps)});
-    //FirebaseFirestore.instance.collection('userinfo').doc(
-    //  loggedInUser.email).update(
-    // {'steps': today});
-    Navigator.pop(context);
-    }
-    ),
-    title: const Text(uEmail),
-    backgroundColor: Colors.teal[200],
-    ),
-    floatingActionButton: FloatingActionButton.extended(
-    onPressed: () {
-    CollectionReference userinfo = FirebaseFirestore.instance.collection('userinfo');
-    userinfo.doc(
-    uEmail).update(
-    {'quitsteps': 1});
-    //FirebaseFirestore.instance.collection('userinfo').doc(
-    //  loggedInUser.email).update(
-    // {'steps': today});
-    Navigator.pop(context);
-    },
-    label: const Text('Stop Counting'),
-    backgroundColor: Colors.teal[200],
-    ),
-    floatingActionButtonLocation: FloatingActionButtonLocation
-        .centerFloat,
-    body: Center(
-    child: Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: <Widget>[
-    Text(
-    'Steps taken:',
-    style: TextStyle(fontSize: 30),
-    ),
-    Text(
-    today.toString(),
-    style: TextStyle(fontSize: 60),
-    ),
-    Divider(
-    height: 100,
-    thickness: 0,
-    color: Colors.white,
-    ),
-    Text(
-    'Pedestrian status:',
-    style: TextStyle(fontSize: 30),
-    ),
-    Icon(
-    _status == 'walking'
-    ? Icons.directions_walk
-        : _status == 'stopped'
-    ? Icons.accessibility_new
-        : Icons.error,
-    size: 100,
-    ),
-    Center(
-    child: Text(
-    _status,
-    style: _status == 'walking' || _status == 'stopped'
-    ? TextStyle(fontSize: 30)
-        : TextStyle(fontSize: 20, color: Colors.red),
+      home: Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+        icon: Icon(Icons.arrow_back, color: Colors.white),
+       onPressed: () {
+         CollectionReference userinfo = FirebaseFirestore.instance.collection('userinfo');
+         userinfo.doc(Uemail).update(
+             {'quitsteps': int.parse(_steps),
+               'steps': today,});
+         Navigator.pop(context);
+        }
+        ),
+        title: const Text('Pedometer'),
+          backgroundColor: Colors.teal[200],
+      ),
+        floatingActionButton: FloatingActionButton.extended(
+           onPressed: () {
+               CollectionReference userinfo = FirebaseFirestore.instance.collection('userinfo');
+               userinfo.doc(Uemail).update({'quitsteps': int.parse(_steps), 'steps': today,});
+               Navigator.pop(context);},
+          label: const Text('Stop Counting'),
+            backgroundColor: Colors.teal[200],
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+           children: <Widget>[
+           Text(
+              'Steps taken:',
+              style: TextStyle(fontSize: 30),
+           ),
+              Text(
+              today.toString(),
+              style: TextStyle(fontSize: 60),
+              ),
+              Divider(
+              height: 100,
+              thickness: 0,
+              color: Colors.white,
+              ),
+              Text(
+              'Pedestrian status:',
+              style: TextStyle(fontSize: 30),
+              ),
+              Icon(
+              _status == 'walking'
+              ? Icons.directions_walk
+                  : _status == 'stopped'
+              ? Icons.accessibility_new
+                  : Icons.error,
+              size: 100,
+              ),
+              Center(
+              child: Text(
+              _status,
+              style: _status == 'walking' || _status == 'stopped'
+              ? TextStyle(fontSize: 30)
+                  : TextStyle(fontSize: 20, color: Colors.red),
     ),
     )
     ],
@@ -218,7 +171,6 @@ class _StepCounterState extends State<StepCounter> {
     ),
     ),
     );
-    });
   }
 
   Future<int> gettoday() async{
