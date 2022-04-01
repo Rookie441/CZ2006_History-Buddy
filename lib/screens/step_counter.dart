@@ -1,69 +1,54 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
 import 'package:pedometer/pedometer.dart';
 import 'package:history_buddy/HistSite.dart';
-import 'package:maps_toolkit/maps_toolkit.dart' as m;
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
+import 'package:jiffy/jiffy.dart';
+import 'package:hive/hive.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import "package:firebase_auth/firebase_auth.dart";
+import '../constants.dart';
 
 
-Future<Position> _getGeoLocationPosition() async {
-  bool serviceEnabled;
-  LocationPermission permission;
-  // Test if location services are enabled.
-  serviceEnabled = await Geolocator.isLocationServiceEnabled();
-  if (!serviceEnabled) {
-    // Location services are not enabled don't continue
-    // accessing the position and request users of the
-    // App to enable the location services.
-    await Geolocator.openLocationSettings();
-    return Future.error('Location services are disabled.');
-  }
-  permission = await Geolocator.checkPermission();
-  if (permission == LocationPermission.denied) {
-    permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied) {
-
-      return Future.error('Location permissions are denied');
-    }
-  }
-  if (permission == LocationPermission.deniedForever) {
-    // Permissions are denied forever, handle appropriately.
-    return Future.error(
-        'Location permissions are permanently denied, we cannot request permissions.');
-  }
-
-  // When we reach here, permissions are granted and we can
-  // continue accessing the position of the device.
-  return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-}
+import '../constants.dart';
 
 String formatDate(DateTime d) {
   return d.toString().substring(0, 19);
 }
 
-class StepCounter extends StatefulWidget {
-  StepCounter({required this.histsite});
 
+class StepCounter extends StatefulWidget {
+  const StepCounter({Key? key,required this.histsite}) : super(key: key);
   final HistSite histsite;
   @override
   _StepCounterState createState() => _StepCounterState();
 }
 
+
 class _StepCounterState extends State<StepCounter> {
-  late m.LatLng _center = m.LatLng(widget.histsite.getCoordinates()[1],
-      widget.histsite.getCoordinates()[0]);
-  late List<m.LatLng> PolygonCoords;
   late Stream<StepCount> _stepCountStream;
   late Stream<PedestrianStatus> _pedestrianStatusStream;
   String _status = '?', _steps = '?';
+  late int todaySteps;
+  static late User loggedInUser;
+  late int quit;
+  static int today = 0;
+  final _auth = FirebaseAuth.instance;
+  static String uEmail = "";
+
+  void main() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Hive.openBox<int>('steps');
+    await Firebase.initializeApp();
+  }
 
   @override
   void initState() {
     super.initState();
     initPlatformState();
+    getCurrentUser();
   }
+
 
   void onStepCount(StepCount event) {
     print(event);
@@ -90,7 +75,8 @@ class _StepCounterState extends State<StepCounter> {
   void onStepCountError(error) {
     print('onStepCountError: $error');
     setState(() {
-      _steps = 'Step Count not available';
+      _steps = '0';
+      //'Step Count not available';
     });
   }
 
@@ -106,103 +92,184 @@ class _StepCounterState extends State<StepCounter> {
     if (!mounted) return;
   }
 
-@override
-showAlertDialog(BuildContext context) {
-
-      ()async {
-    Position position = await _getGeoLocationPosition();
-    late m.LatLng _user = m.LatLng(position.latitude, position.longitude);
-    PolygonCoords.add(m.SphericalUtil.computeOffset(_center, 708, 45));
-    PolygonCoords.add(m.SphericalUtil.computeOffset(_center, 708, 135));
-    PolygonCoords.add(m.SphericalUtil.computeOffset(_center, 708, 225));
-    PolygonCoords.add(m.SphericalUtil.computeOffset(_center, 708, 315));
-    if (!m.PolygonUtil.containsLocation(_user, PolygonCoords, false)) {
-
-      // set up the button
-      Widget okButton = TextButton(
-        child: Text("OK"),
-        onPressed: () { },
-      );
-
-      // set up the AlertDialog
-      AlertDialog alert = AlertDialog(
-        title: Text("Stopped Step Tracking"),
-        content: Text("You are too far away from the historical site! Move closer to start step tracking!"),
-        actions: [
-          okButton,
-        ],
-      );
-
-      // show the dialog
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return alert;
-        },
-      );
-
-      Navigator.pop(context);
-    }
-  };
-
+  Future<int> getquit() async {
+    await FirebaseFirestore.instance
+        .collection('userinfo')
+        .get()
+        .then((QuerySnapshot querySnapshot) {
+      querySnapshot.docs.forEach((doc) {
+        //this is not expensive
+        if (loggedInUser.email == doc.id.toLowerCase()) {
+          quit = doc["quitsteps"];
+        }
+      });
+    });
+    return quit;
   }
+
+  Future<String> getEmail() async {
+    await FirebaseFirestore.instance
+        .collection('userinfo')
+        .get()
+        .then((QuerySnapshot querySnapshot) {
+      querySnapshot.docs.forEach((doc) {
+        //this is not expensive
+        if (loggedInUser.email == doc.id.toLowerCase()) {
+          uEmail = doc.id;
+        }
+      });
+    });
+    return uEmail;
+  }
+
+
+  void getCurrentUser() async {
+    try {
+      final user = await _auth.currentUser;
+      if (user != null) {
+        loggedInUser = user;
+      }
+    } catch (e) {
+      errorAlert(e, context); //see constants.dart
+    }
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder<String>(
+        future: getEmail(),
+        builder: (context, snapshot) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          title: const Text('Pedometer'),
-          backgroundColor: Colors.teal[200],
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                'Steps taken:',
-                style: TextStyle(fontSize: 30),
-              ),
-              Text(
-                _steps,
-                style: TextStyle(fontSize: 60),
-              ),
-              Divider(
-                height: 100,
-                thickness: 0,
-                color: Colors.white,
-              ),
-              Text(
-                'Pedestrian status:',
-                style: TextStyle(fontSize: 30),
-              ),
-              Icon(
-                _status == 'walking'
-                    ? Icons.directions_walk
-                    : _status == 'stopped'
-                    ? Icons.accessibility_new
-                    : Icons.error,
-                size: 100,
-              ),
-              Center(
-                child: Text(
-                  _status,
-                  style: _status == 'walking' || _status == 'stopped'
-                      ? TextStyle(fontSize: 30)
-                      : TextStyle(fontSize: 20, color: Colors.red),
-                ),
-              )
-            ],
-          ),
-        ),
-      ),
+    home: Scaffold(
+    appBar: AppBar(
+    leading: IconButton(
+    icon: Icon(Icons.arrow_back, color: Colors.white),
+    onPressed: () {
+    //FirebaseFirestore.instance.collection('userinfo').doc(
+    //  loggedInUser.email).update(
+    //{'quitsteps': int.parse(_steps)});
+    //FirebaseFirestore.instance.collection('userinfo').doc(
+    //  loggedInUser.email).update(
+    // {'steps': today});
+    Navigator.pop(context);
+    }
+    ),
+    title: const Text(uEmail),
+    backgroundColor: Colors.teal[200],
+    ),
+    floatingActionButton: FloatingActionButton.extended(
+    onPressed: () {
+    CollectionReference userinfo = FirebaseFirestore.instance.collection('userinfo');
+    userinfo.doc(
+    uEmail).update(
+    {'quitsteps': 1});
+    //FirebaseFirestore.instance.collection('userinfo').doc(
+    //  loggedInUser.email).update(
+    // {'steps': today});
+    Navigator.pop(context);
+    },
+    label: const Text('Stop Counting'),
+    backgroundColor: Colors.teal[200],
+    ),
+    floatingActionButtonLocation: FloatingActionButtonLocation
+        .centerFloat,
+    body: Center(
+    child: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: <Widget>[
+    Text(
+    'Steps taken:',
+    style: TextStyle(fontSize: 30),
+    ),
+    Text(
+    today.toString(),
+    style: TextStyle(fontSize: 60),
+    ),
+    Divider(
+    height: 100,
+    thickness: 0,
+    color: Colors.white,
+    ),
+    Text(
+    'Pedestrian status:',
+    style: TextStyle(fontSize: 30),
+    ),
+    Icon(
+    _status == 'walking'
+    ? Icons.directions_walk
+        : _status == 'stopped'
+    ? Icons.accessibility_new
+        : Icons.error,
+    size: 100,
+    ),
+    Center(
+    child: Text(
+    _status,
+    style: _status == 'walking' || _status == 'stopped'
+    ? TextStyle(fontSize: 30)
+        : TextStyle(fontSize: 20, color: Colors.red),
+    ),
+    )
+    ],
+    ),
+    ),
+    ),
     );
+    });
+  }
+
+  Future<int> gettoday() async{
+    today = await getTodaySteps(int.parse(_steps));
+    return today;
   }
 
 
 
+  Future<int> getTodaySteps(int value) async {
+    Box<int> stepsBox = Hive.box('steps');
+    print(value);
+    int savedStepsCountKey = 999999;
+    int? savedStepsCount = stepsBox.get(savedStepsCountKey, defaultValue: 0);
+
+    int todayDayNo = Jiffy(DateTime.now()).dayOfYear;
+    if (value < savedStepsCount!) {
+      // Upon device reboot, pedometer resets. When this happens, the saved counter must be reset as well.
+      savedStepsCount = 0;
+      // persist this value using a package of your choice here
+      stepsBox.put(savedStepsCountKey, savedStepsCount);
+    }
+
+    // load the last day saved using a package of your choice here
+    int lastDaySavedKey = 888888;
+    int? lastDaySaved = stepsBox.get(lastDaySavedKey, defaultValue: 0);
+
+    // When the day changes, reset the daily steps count
+    // and Update the last day saved as the day changes.
+    if (lastDaySaved! < todayDayNo) {
+      lastDaySaved = todayDayNo;
+      savedStepsCount = value;
+
+      stepsBox
+        ..put(lastDaySavedKey, lastDaySaved)
+        ..put(savedStepsCountKey, savedStepsCount);
+    }
+
+    setState(() async {
+      todaySteps = value - savedStepsCount!;
+      int tempquit = await getquit();
+      int temp = value - tempquit;
+      if (tempquit != 0){
+        todaySteps -= temp;
+      }
+    });
+    stepsBox.put(todayDayNo, todaySteps);
+    return todaySteps; // this is your daily steps value.
+  }
+
+
 }
+
+
