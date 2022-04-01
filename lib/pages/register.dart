@@ -182,6 +182,7 @@ class _RegisterState extends State<Register> {
                                   .millisecondsSinceEpoch, //Date of account creation
                               'calories': 0,
                               'steps': 0,
+                              'quitsteps' : 0,
                               // calories and steps can be stored in another collection and set only when user starts a route
                             });
 
