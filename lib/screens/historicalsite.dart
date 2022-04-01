@@ -50,8 +50,8 @@ class _historicalsiteState extends State<historicalsite> {
 
       HistSite histsite = HistSite(
           siteName,
-          data["features"][i]["geometry"]["coordinates"][0],
           data["features"][i]["geometry"]["coordinates"][1],
+          data["features"][i]["geometry"]["coordinates"][0],
           desc,
           0,
           i);
@@ -143,7 +143,7 @@ class _historicalsiteState extends State<historicalsite> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return Scaffold(
-                backgroundColor: Colors.white70,
+                backgroundColor: Colors.brown[200],
                 body: NestedScrollView(
                     floatHeaderSlivers: true,
                     headerSliverBuilder:
@@ -151,7 +151,7 @@ class _historicalsiteState extends State<historicalsite> {
                       return <Widget>[
                         SliverAppBar(
                           elevation: 0,
-                          backgroundColor: Colors.teal[200],
+                          backgroundColor: Colors.brown[300],
                           title: Text("Historical Sites",
                               style:
                                   TextStyle(fontSize: 22, color: Colors.white)),
@@ -187,9 +187,9 @@ class _historicalsiteState extends State<historicalsite> {
                                 Flexible(
                                   child: Text(
                                       historicalsite.sortedHistSites[index]
-                                          .getDesc(),
-                                      maxLines: 3,
-                                      overflow: TextOverflow.ellipsis),
+                                          .getDesc()),
+                                      //maxLines: 3,
+                                      //overflow: TextOverflow.ellipsis),
                                 ),
                                 //Padding(
                                 //padding: EdgeInsets.only(top: 8.0),
