@@ -324,7 +324,10 @@ class _friendsPageState extends State<friendsPage> {
                               ).show();
                             },
                             leading: CircleAvatar(
-                              backgroundImage: AssetImage("images/Avatar.png"),
+                              child: Text(friend
+                                  .toString()
+                                  .substring(0, 1)
+                                  .toUpperCase()),
                             ),
                             title: Text(friend),
                             //ternary operator introduced because widget may attempt creation before requestNameList is updated (may be null) -> Forced a setstate for all get functions but implemented just in case
@@ -419,7 +422,10 @@ class _friendsPageState extends State<friendsPage> {
                               ).show();
                             },
                             leading: CircleAvatar(
-                              backgroundImage: AssetImage("images/Avatar.png"),
+                              child: Text(friend
+                                  .toString()
+                                  .substring(0, 1)
+                                  .toUpperCase()),
                             ),
                             title: Text(friend),
                             //ternary operator introduced because widget may attempt creation before friendNameList is updated (may be null) -> Forced a setstate for all get functions but implemented just in case

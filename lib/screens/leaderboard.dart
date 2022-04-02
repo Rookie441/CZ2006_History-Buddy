@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:history_buddy/pages/mainmenu.dart';
 
 final _firestore = FirebaseFirestore.instance;
 
@@ -11,13 +14,15 @@ class leaderboardPage extends StatefulWidget {
 class _leaderboardPageState extends State<leaderboardPage> {
   List usernameList = [];
   var dataMap = {};
+  var dropdownValue = 'steps';
+  String username = MainMenuState.username.toString();
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
         stream: _firestore
             .collection('userinfo')
-            .orderBy('calories', descending: true)
+            .orderBy(dropdownValue, descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
@@ -31,7 +36,7 @@ class _leaderboardPageState extends State<leaderboardPage> {
           var dataMap = Map();
           List usernameList = [];
           for (var document in data) {
-            dataMap[document.get('username')] = document.get('calories');
+            dataMap[document.get('username')] = document.get(dropdownValue);
             usernameList.add(document.get('username'));
           }
           this.usernameList = usernameList;
@@ -48,14 +53,13 @@ class _leaderboardPageState extends State<leaderboardPage> {
                   Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
+                        padding: const EdgeInsets.only(left: 10.0, right: 10.0),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
                               "Leaderboard",
-                              textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 30.0,
                                 fontFamily: 'Pacifico',
@@ -65,8 +69,31 @@ class _leaderboardPageState extends State<leaderboardPage> {
                             SizedBox(
                               width: 35.0,
                             ),
-                            Text(
-                              "Calories Burnt",
+                            DropdownButton<String>(
+                              value: dropdownValue,
+                              icon: const Icon(Icons.arrow_downward),
+                              elevation: 16,
+                              style: const TextStyle(
+                                  fontSize: 16.0, color: Colors.deepPurple),
+                              underline: Container(
+                                height: 2,
+                                color: Colors.deepPurpleAccent,
+                              ),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  dropdownValue = newValue!;
+                                });
+                              },
+                              items: <String>[
+                                'steps',
+                                'calories',
+                                'quitsteps'
+                              ].map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
                             ),
                           ],
                         ),
@@ -85,12 +112,20 @@ class _leaderboardPageState extends State<leaderboardPage> {
                             children: [
                               for (var index in usernameList)
                                 ListTile(
+                                  tileColor: index.toString() == username
+                                      ? Colors.grey
+                                      : Colors.brown[200],
                                   leading: CircleAvatar(
-                                    backgroundImage:
-                                        AssetImage("images/Avatar.png"),
+                                    child: Text(index
+                                        .toString()
+                                        .substring(0, 1)
+                                        .toUpperCase()),
                                   ),
                                   title: Text(index.toString()),
-                                  trailing: Text(dataMap[index].toString()),
+                                  trailing: Text(
+                                    dataMap[index].toString(),
+                                    style: TextStyle(fontSize: 18.0),
+                                  ),
                                 ),
                             ],
                           )),
