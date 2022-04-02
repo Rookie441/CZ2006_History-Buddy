@@ -5,7 +5,6 @@ import '../constants.dart';
 import "package:rflutter_alert/rflutter_alert.dart";
 import "package:cloud_firestore/cloud_firestore.dart";
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
-import 'package:animated_text_kit/animated_text_kit.dart';
 
 final _firestore = FirebaseFirestore.instance;
 
@@ -15,8 +14,17 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
+  final _formKey = GlobalKey<FormState>();
   final _auth = FirebaseAuth.instance;
   bool showSpinner = false;
+
+  // Text Controllers
+  final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _emailController = TextEditingController();
+
+  // Input Fields
   late String name;
   late String username;
   late String password;
@@ -28,199 +36,216 @@ class _RegisterState extends State<Register> {
       backgroundColor: Colors.white,
       body: ModalProgressHUD(
         inAsyncCall: showSpinner,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 15.0, horizontal: 24.0),
-                  child: Text(
-                    "Registration",
-                    style: TextStyle(
-                      fontSize: 45.0,
-                      fontFamily: 'Pacifico',
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 5.0),
-                  child: Text("Name"),
-                ),
-                // Keyboard restriction to requirements means less cases for error handling
-                TextField(
-                  maxLength: 255, //Length limit with counter
-                  keyboardType: TextInputType.visiblePassword,
-                  inputFormatters: [
-                    //LengthLimitingTextInputFormatter(30), //Length limit without counter
-                    new FilteringTextInputFormatter(RegExp("[a-zA-Z '.-/]"),
-                        allow: true),
-                  ],
-                  onChanged: (value) {
-                    name = value;
-                  },
-                  decoration: buildInputDecoration(
-                      "Enter your name"), //see constants.dart
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 5.0),
-                  child: Text("Username"),
-                ),
-                TextField(
-                  maxLength: 30,
-                  keyboardType: TextInputType.visiblePassword,
-                  inputFormatters: [
-                    new FilteringTextInputFormatter(RegExp("[a-zA-Z0-9._]"),
-                        allow: true),
-                  ],
-                  onChanged: (value) {
-                    username = value;
-                  },
-                  decoration: buildInputDecoration(
-                      "Alphanumeric, dots and underscores only"),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 5.0),
-                  child: Text("Password"),
-                ),
-                TextField(
-                  maxLength: 128,
-                  obscureText: true,
-                  onChanged: (value) {
-                    password = value;
-                  },
-                  decoration:
-                      buildInputDecoration("Must be at least 6 characters"),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 5.0),
-                  child: Text("Email"),
-                ),
-                TextField(
-                  maxLength: 320,
-                  keyboardType: TextInputType.emailAddress,
-                  inputFormatters: [
-                    new FilteringTextInputFormatter(RegExp("[^ ]"),
-                        allow: true),
-                  ],
-                  onChanged: (value) {
-                    email = value;
-                  },
-                  decoration: buildInputDecoration("Enter your email"),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16.0),
-                  child: Material(
-                    color: Colors.lightBlueAccent,
-                    borderRadius: BorderRadius.all(Radius.circular(30.0)),
-                    elevation: 5.0,
-                    child: MaterialButton(
-                      onPressed: () async {
-                        setState(() {
-                          showSpinner = true;
-                        });
-                        try {
-                          // character minimum requirement error handling (not including whitespaces and symbols)
-                          int name_length =
-                              name.split(RegExp(r"[a-zA-Z]")).length - 1;
-                          int username_length =
-                              username.split(RegExp(r"[a-zA-Z0-9]")).length - 1;
-                          if (name_length < 2 || username_length < 3) {
-                            if (name_length < 2) {
-                              Alert(
-                                      context: context,
-                                      title: "Inappropriate Length",
-                                      desc:
-                                          "Name should contain at least 2 alphabets")
-                                  .show();
-                            } else {
-                              Alert(
-                                      context: context,
-                                      title: "Inappropriate Length",
-                                      desc:
-                                          "Username should contain at least 3 characters")
-                                  .show();
-                            }
-                            return;
-                          }
-                          bool taken = false;
-                          // await to iterate through list of usernames in database and break when match is found (error popup), else allow user creation
-                          await _firestore
-                              .collection('userinfo')
-                              .get()
-                              .then((QuerySnapshot querySnapshot) {
-                            querySnapshot.docs.forEach((doc) {
-                              if (username == doc["username"]) {
-                                taken = true;
-                              }
-                            });
-                          });
-                          if (taken) {
-                            Alert(
-                                    context: context,
-                                    title: "Username taken",
-                                    desc: "Please try another one")
-                                .show();
-                            return;
-                          }
-                          final newUser =
-                              await _auth.createUserWithEmailAndPassword(
-                                  email: email, password: password);
-                          if (newUser != null) {
-                            //create database collection "userinfo" with email as documentName and fields: name, username
-                            _firestore.collection('userinfo').doc(email).set({
-                              'name': name,
-                              'username': username,
-                              'friends': [],
-                              'requests': [],
-                              'created': DateTime.now()
-                                  .toUtc()
-                                  .millisecondsSinceEpoch, //Date of account creation
-                              'calories': 0,
-                              'steps': 0,
-                              'quitsteps' : 0,
-                              // calories and steps can be stored in another collection and set only when user starts a route
-                            });
-
-                            Alert(
-                              context: context,
-                              title: "Success!",
-                              desc: "Successfully created account '$username'",
-                              buttons: [
-                                DialogButton(
-                                  child: Text(
-                                    "Back to MainMenu",
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 20),
-                                  ),
-                                  onPressed: () =>
-                                      Navigator.pushNamed(context, "/"),
-                                  width: 200,
-                                )
-                              ],
-                            ).show();
-                          }
-                        } catch (e) {
-                          errorAlert(e, context);
-                        } finally {
-                          setState(() {
-                            showSpinner = false;
-                          });
-                        }
-                      },
-                      minWidth: 200.0,
-                      height: 42.0,
-                      child: Text(
-                        'Register',
+        child: Form(
+          key: _formKey,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 25.0, horizontal: 24.0),
+                    child: Text(
+                      "Registration",
+                      style: TextStyle(
+                        fontSize: 45.0,
+                        fontFamily: 'Pacifico',
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
-                ),
-              ],
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 15.0),
+                    child: TextFormField(
+                      controller: _nameController,
+                      maxLength: 255, //Length limit with counter
+                      keyboardType: TextInputType.visiblePassword,
+                      decoration: registerInputDecoration(
+                        'Name',
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Name field cannot be empty';
+                          // character minimum requirement error handling (not including whitespaces and symbols)
+                        } else if (value.split(RegExp(r"[a-zA-Z]")).length - 1 <
+                            2) {
+                          return 'Name should contain at least 2 alphabets';
+                        } else if (RegExp(r"[^a-zA-Z '.-/]").hasMatch(value)) {
+                          return 'Name cannot contain that special character';
+                        } else {
+                          name = value;
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 15.0),
+                    child: TextFormField(
+                      controller: _usernameController,
+                      maxLength: 30, //Length limit with counter
+                      keyboardType: TextInputType.visiblePassword,
+                      decoration: registerInputDecoration(
+                        'Username',
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Username field cannot be empty';
+                          // character minimum requirement error handling (not including whitespaces and symbols)
+                        } else if (value.split(RegExp(r"[a-zA-Z0-9]")).length -
+                                1 <
+                            3) {
+                          return 'Username should contain at least 3 characters';
+                        } else if (RegExp(r"[^a-zA-Z0-9._]").hasMatch(value)) {
+                          return 'Alphanumeric, dots and underscores only';
+                        } else {
+                          username = value;
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 15.0),
+                    child: TextFormField(
+                      controller: _passwordController,
+                      maxLength: 128,
+                      obscureText: true,
+                      decoration: registerInputDecoration(
+                        'Password',
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Password field cannot be empty';
+                        } else if (value.length < 6) {
+                          return 'Must be at least 6 characters';
+                        } else {
+                          password = value;
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 15.0),
+                    child: TextFormField(
+                      controller: _emailController,
+                      maxLength: 320,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: registerInputDecoration(
+                        'Email',
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Email field cannot be empty';
+                        } else if (RegExp(r"[ ]").hasMatch(value)) {
+                          return 'Cannot have spaces';
+                        } else {
+                          email = value;
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 45.0),
+                    child: Material(
+                      color: Colors.lightBlueAccent,
+                      borderRadius: BorderRadius.all(Radius.circular(30.0)),
+                      elevation: 5.0,
+                      child: MaterialButton(
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            setState(() {
+                              showSpinner = true;
+                            });
+                            try {
+                              bool taken = false;
+                              // await to iterate through list of usernames in database and break when match is found (error popup), else allow user creation
+                              await _firestore
+                                  .collection('userinfo')
+                                  .get()
+                                  .then((QuerySnapshot querySnapshot) {
+                                querySnapshot.docs.forEach((doc) {
+                                  if (username == doc["username"]) {
+                                    taken = true;
+                                  }
+                                });
+                              });
+                              if (taken) {
+                                Alert(
+                                        context: context,
+                                        title: "Username taken",
+                                        desc: "Please try another one")
+                                    .show();
+                                return;
+                              }
+                              final newUser =
+                                  await _auth.createUserWithEmailAndPassword(
+                                      email: email, password: password);
+                              if (newUser != null) {
+                                //create database collection "userinfo" with email as documentName and fields: name, username
+                                _firestore
+                                    .collection('userinfo')
+                                    .doc(email)
+                                    .set({
+                                  'name': name,
+                                  'username': username,
+                                  'friends': [],
+                                  'requests': [],
+                                  'created': DateTime.now()
+                                      .toUtc()
+                                      .millisecondsSinceEpoch, //Date of account creation
+                                  'calories': 0,
+                                  'steps': 0,
+                                  'quitsteps': 0,
+                                });
+
+                                Alert(
+                                  context: context,
+                                  title: "Success!",
+                                  desc:
+                                      "Successfully created account '$username'",
+                                  buttons: [
+                                    DialogButton(
+                                      child: Text(
+                                        "Back to MainMenu",
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 20),
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.pushNamed(context, "/"),
+                                      width: 200,
+                                    )
+                                  ],
+                                ).show();
+                              }
+                            } catch (e) {
+                              Alert(
+                                      context: context,
+                                      title: "Invalid Email",
+                                      desc: "Please use a valid email address")
+                                  .show();
+                            } finally {
+                              setState(() {
+                                showSpinner = false;
+                              });
+                            }
+                          }
+                        },
+                        minWidth: 200.0,
+                        height: 42.0,
+                        child: Text(
+                          'Register',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

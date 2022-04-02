@@ -20,6 +20,25 @@ InputDecoration buildInputDecoration(String hintText) {
   );
 }
 
+InputDecoration registerInputDecoration(String labelText) {
+  return InputDecoration(
+    labelText: labelText,
+    hintStyle: TextStyle(fontSize: 15.0, color: Colors.grey),
+    contentPadding: EdgeInsets.symmetric(vertical: 18.0, horizontal: 20.0),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(32.0)),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.lightBlueAccent, width: 1.0),
+      borderRadius: BorderRadius.all(Radius.circular(32.0)),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.lightBlueAccent, width: 2.0),
+      borderRadius: BorderRadius.all(Radius.circular(32.0)),
+    ),
+  );
+}
+
 const kHeadingTextStyle = TextStyle(
   fontSize: 18.0,
   color: Colors.black,
@@ -45,7 +64,7 @@ void errorAlert(e, context) {
   // Empty Username or password
   if (error_type == "LateInitializationError" ||
       error_msg == " Given String is empty or null") {
-    error_type = "Empty fields detected";
+    error_type = "Login details cannot be empty";
     error_msg = "Please try again";
   }
 
