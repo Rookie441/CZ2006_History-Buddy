@@ -35,6 +35,7 @@ class _StepCounterState extends State<StepCounter> {
     WidgetsFlutterBinding.ensureInitialized();
     await Hive.openBox<int>('steps');
     await Firebase.initializeApp();
+    today = await getTodaySteps(int.parse(_steps));
   }
 
   @override
@@ -113,7 +114,7 @@ class _StepCounterState extends State<StepCounter> {
          CollectionReference userinfo = FirebaseFirestore.instance.collection('userinfo');
          userinfo.doc(Uemail).update(
              {'quitsteps': int.parse(_steps),
-               'steps': gettoday(),});
+               'steps': today,});
          Navigator.pop(context);
         }
         ),
@@ -123,7 +124,7 @@ class _StepCounterState extends State<StepCounter> {
         floatingActionButton: FloatingActionButton.extended(
            onPressed: () {
                CollectionReference userinfo = FirebaseFirestore.instance.collection('userinfo');
-               userinfo.doc(Uemail).update({'quitsteps': int.parse(_steps), 'steps': gettoday(),});
+               userinfo.doc(Uemail).update({'quitsteps': int.parse(_steps), 'steps': today,});
                Navigator.pop(context);},
           label: const Text('Stop Counting'),
             backgroundColor: Colors.teal[200],
@@ -138,7 +139,7 @@ class _StepCounterState extends State<StepCounter> {
               style: TextStyle(fontSize: 30),
            ),
               Text(
-                gettoday().toString(),
+                today.toString(),
               style: TextStyle(fontSize: 60),
               ),
               Divider(
@@ -173,10 +174,7 @@ class _StepCounterState extends State<StepCounter> {
     );
   }
 
-  Future<int> gettoday() async{
-    today = await getTodaySteps(int.parse(_steps));
-    return today;
-  }
+
 
 
 
