@@ -77,7 +77,7 @@ class MainMenuState extends State<MainMenu> {
         builder: (context, snapshot) {
           return Scaffold(
             resizeToAvoidBottomInset: false,
-            backgroundColor: Colors.white70,
+            backgroundColor: Colors.brown[600],
             appBar: AppBar(
               automaticallyImplyLeading:
                   false, //prevents accidental backtracking

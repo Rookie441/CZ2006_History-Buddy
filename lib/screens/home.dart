@@ -1,3 +1,4 @@
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -57,39 +58,91 @@ class _homePageState extends State<homePage> {
             body: Center(
               child: Column(
                 children: <Widget>[
-                  Row(
-                    children: [
-                      Text(
-                        'Calories: $calories',
-                        style: kHeadingTextStyle,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                    child: CircleAvatar(
+                      radius: 50,
+                      child: Text(
+                        MainMenuState.username
+                            .toString()
+                            .substring(0, 1)
+                            .toUpperCase(),
+                        style: TextStyle(fontSize: 50),
                       ),
-                    ],
+                    ),
                   ),
-                  Row(
-                    children: [
-                      Text(
-                        'Steps: $steps',
-                        style: kHeadingTextStyle,
-                      ),
-                    ],
+                  Text(
+                    MainMenuState.loggedInUser.email.toString(),
+                    style: TextStyle(fontSize: 20),
                   ),
                   SizedBox(
-                    height: 100.0,
+                    height: 8.0,
                   ),
-                  CircleAvatar(
-                    radius: 100.0,
-                    backgroundImage: AssetImage("images/Logo.png"),
+                  Divider(
+                    color: Colors.black,
+                    height: 15,
+                    thickness: 2,
+                    indent: 5,
+                    endIndent: 5,
                   ),
-                  RaisedButton(
-                    color: Colors.red,
-                    child: Column(
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Text('Play'),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Icon(
+                              Icons.local_fire_department,
+                              size: 50,
+                            ),
+                            Text(
+                              'Calories: $calories',
+                              style: kHeadingTextStyle,
+                            ),
+                          ],
+                        ),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Icon(
+                              Icons.nordic_walking,
+                              size: 50,
+                            ),
+                            Text(
+                              'Steps: $steps',
+                              style: kHeadingTextStyle,
+                            ),
+                          ],
+                        )
                       ],
                     ),
-                    onPressed: () {
-                      print("pressed");
-                    },
+                  ),
+                  SizedBox(
+                    height: 60,
+                  ),
+                  SizedBox(
+                    width: 350.0,
+                    child: DefaultTextStyle(
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 35.0,
+                        fontFamily: 'DancingScript',
+                      ),
+                      child: AnimatedTextKit(
+                        animatedTexts: [
+                          TypewriterAnimatedText(
+                              "'Not all those who wander are lost' ~ J.R.R. Tolkien"),
+                          TypewriterAnimatedText(
+                              "'The world is a book and those who do not travel read only one page.' ~ Saint Augustine"),
+                          TypewriterAnimatedText(
+                              "'Life is either a daring adventure or nothing at all' ~ Helen Keller"),
+                          TypewriterAnimatedText(
+                              "Take only memories, leave only footprints' ~ Chief Seattle"),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),

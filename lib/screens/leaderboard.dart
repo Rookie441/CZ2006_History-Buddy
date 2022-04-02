@@ -31,6 +31,7 @@ class _leaderboardPageState extends State<leaderboardPage> {
         }
       });
     });
+    friendList.add(username); //add self
     this.usernameList = friendList;
     setState(() {});
   }
