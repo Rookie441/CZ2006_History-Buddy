@@ -139,7 +139,7 @@ class _historicalsiteState extends State<historicalsite> {
     return FutureBuilder(
         future: Future.wait([
           asyncLoad(),
-        ]), //multiple futures to wait for
+        ]),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return Scaffold(
@@ -185,11 +185,11 @@ class _historicalsiteState extends State<historicalsite> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
                                 Flexible(
-                                  child: Text(
-                                      historicalsite.sortedHistSites[index]
-                                          .getDesc()),
-                                      //maxLines: 3,
-                                      //overflow: TextOverflow.ellipsis),
+                                  child: Text(historicalsite
+                                      .sortedHistSites[index]
+                                      .getDesc()),
+                                  //maxLines: 3,
+                                  //overflow: TextOverflow.ellipsis),
                                 ),
                                 //Padding(
                                 //padding: EdgeInsets.only(top: 8.0),

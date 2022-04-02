@@ -48,6 +48,7 @@ class StepTracking extends StatefulWidget {
 class _StepTrackingState extends State<StepTracking> {
   late LatLng _user;
   late Position currentLocation;
+  late double distance;
 
   @override
   void initState() {
@@ -57,14 +58,21 @@ class _StepTrackingState extends State<StepTracking> {
   }
 
   Future<Position> locateUser() async {
-    return _getGeoLocationPosition();
+    return await _getGeoLocationPosition();
   }
 
-  getUserLocation() async {
+  Future getUserLocation() async {
     currentLocation = await locateUser();
     setState(() {
       _user = LatLng(currentLocation.latitude, currentLocation.longitude);
     });
+  }
+
+  Future getDistance() async {
+    final start = [_center.latitude, _center.longitude];
+    final end = [_user.latitude, _user.longitude];
+    this.distance =
+        Geolocator.distanceBetween(start[0], start[1], end[0], end[1]);
   }
 
   late LatLng _center = LatLng(
@@ -100,66 +108,76 @@ class _StepTrackingState extends State<StepTracking> {
       )
     };
 
-    final start = [_center.latitude, _center.longitude];
-    final end = [_user.latitude, _user.longitude];
-    late double distance =
-        Geolocator.distanceBetween(start[0], start[1], end[0], end[1]);
-
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          title: Text(widget.histsite.getName()),
-          backgroundColor: Colors.teal[200],
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
-            if (distance > 500) {
-              showDialog(
-                  context: context,
-                  builder: (_) => AlertDialog(
-                        title: Text('Stopped Step Tracking'),
-                        content: Text(
-                            'You are too far away from the historical site! Move closer to start step tracking!'),
-                        actions: <Widget>[
-                          new TextButton(
-                            onPressed: () {
-                              Navigator.of(context)
-                                  .pop(); // dismisses only the dialog and returns nothing
-                            },
-                            child: new Text('OK'),
-                          ),
-                        ],
-                      ));
-            } else {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => StepCounter(
-                      histsite: widget.histsite,
-                    ),
-                  ));
-            }
-          },
-          label: const Text('Start Counting!'),
-          backgroundColor: Colors.teal[200],
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        body: GoogleMap(
-          onMapCreated: _onMapCreated,
-          initialCameraPosition: CameraPosition(
-            target: _center,
-            zoom: 15.0,
-          ),
-          myLocationEnabled: true,
-          myLocationButtonEnabled: true,
-          markers: markers.values.toSet(),
-          circles: myCircles,
-        ),
-      ),
-    );
+    return FutureBuilder(
+        future: Future.wait([
+          locateUser(),
+          getUserLocation(),
+          getDistance(),
+        ]),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return MaterialApp(
+              home: Scaffold(
+                appBar: AppBar(
+                  leading: IconButton(
+                    icon: Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  title: Text(widget.histsite.getName()),
+                  backgroundColor: Colors.teal[200],
+                ),
+                floatingActionButton: FloatingActionButton.extended(
+                  onPressed: () {
+                    if (distance > 500) {
+                      showDialog(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                                title: Text('Stopped Step Tracking'),
+                                content: Text(
+                                    'You are too far away from the historical site! Move closer to start step tracking!'),
+                                actions: <Widget>[
+                                  new TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context)
+                                          .pop(); // dismisses only the dialog and returns nothing
+                                    },
+                                    child: new Text('OK'),
+                                  ),
+                                ],
+                              ));
+                    } else {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => StepCounter(
+                              histsite: widget.histsite,
+                            ),
+                          ));
+                    }
+                  },
+                  label: const Text('Start Counting!'),
+                  backgroundColor: Colors.teal[200],
+                ),
+                floatingActionButtonLocation:
+                    FloatingActionButtonLocation.centerFloat,
+                body: GoogleMap(
+                  onMapCreated: _onMapCreated,
+                  initialCameraPosition: CameraPosition(
+                    target: _center,
+                    zoom: 15.0,
+                  ),
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: true,
+                  markers: markers.values.toSet(),
+                  circles: myCircles,
+                ),
+              ),
+            );
+          } else {
+            return Scaffold(
+              body: Text("Loading..."),
+            );
+          }
+        });
   }
 }
