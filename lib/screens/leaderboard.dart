@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:history_buddy/pages/mainmenu.dart';
@@ -14,15 +12,35 @@ class leaderboardPage extends StatefulWidget {
 class _leaderboardPageState extends State<leaderboardPage> {
   List usernameList = [];
   var dataMap = {};
-  var dropdownValue = 'steps';
+  var dataFilter = 'steps';
+  var viewFilter = 'global';
+  String email = MainMenuState.loggedInUser.email.toString();
   String username = MainMenuState.username.toString();
+
+  Future<void> getFriendList() async {
+    List<String> friendList = [];
+    await _firestore
+        .collection('userinfo')
+        .get()
+        .then((QuerySnapshot querySnapshot) {
+      querySnapshot.docs.forEach((doc) {
+        if (email == doc.id.toLowerCase()) {
+          for (String friendUsername in doc["friends"]) {
+            friendList.add(friendUsername);
+          }
+        }
+      });
+    });
+    this.usernameList = friendList;
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
         stream: _firestore
             .collection('userinfo')
-            .orderBy(dropdownValue, descending: true)
+            .orderBy(dataFilter, descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
@@ -34,12 +52,31 @@ class _leaderboardPageState extends State<leaderboardPage> {
           }
           final data = snapshot.data!.docs;
           var dataMap = Map();
-          List usernameList = [];
-          for (var document in data) {
-            dataMap[document.get('username')] = document.get(dropdownValue);
-            usernameList.add(document.get('username'));
+
+          if (viewFilter == 'friends') {
+            getFriendList();
+            for (var document in data) {
+              for (String user in this.usernameList) {
+                try {
+                  if (user == document.get('username'))
+                    dataMap[user] = document.get(dataFilter);
+                } catch (e) {
+                  print(e);
+                }
+              }
+            }
+          } else {
+            List usernameList = [];
+            for (var document in data) {
+              try {
+                dataMap[document.get('username')] = document.get(dataFilter);
+                usernameList.add(document.get('username'));
+              } catch (e) {
+                print(e);
+              }
+            }
+            this.usernameList = usernameList;
           }
-          this.usernameList = usernameList;
 
           return Scaffold(
             backgroundColor: Colors.brown[200],
@@ -55,9 +92,32 @@ class _leaderboardPageState extends State<leaderboardPage> {
                       Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 10.0),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
+                            DropdownButton<String>(
+                              value: viewFilter,
+                              style: const TextStyle(
+                                  fontSize: 16.0, color: Colors.deepPurple),
+                              underline: Container(
+                                height: 2,
+                                color: Colors.deepPurpleAccent,
+                              ),
+                              onChanged: (String? newValue) async {
+                                setState(() {
+                                  viewFilter = newValue!;
+                                });
+                              },
+                              items: <String>[
+                                'global',
+                                'friends'
+                              ].map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                            ),
                             Text(
                               "Leaderboard",
                               style: TextStyle(
@@ -70,7 +130,7 @@ class _leaderboardPageState extends State<leaderboardPage> {
                               width: 35.0,
                             ),
                             DropdownButton<String>(
-                              value: dropdownValue,
+                              value: dataFilter,
                               icon: const Icon(Icons.arrow_downward),
                               elevation: 16,
                               style: const TextStyle(
@@ -81,7 +141,7 @@ class _leaderboardPageState extends State<leaderboardPage> {
                               ),
                               onChanged: (String? newValue) {
                                 setState(() {
-                                  dropdownValue = newValue!;
+                                  dataFilter = newValue!;
                                 });
                               },
                               items: <String>[
