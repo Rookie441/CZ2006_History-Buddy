@@ -41,7 +41,15 @@ void errorAlert(e, context) {
   error_type = error.substring(start, index);
   error_msg = error.substring(index + 1);
 
-  // Since username login is implemented, edit error msg
+  // Custom error messages
+  // Empty Username or password
+  if (error_type == "LateInitializationError" ||
+      error_msg == " Given String is empty or null") {
+    error_type = "Empty fields detected";
+    error_msg = "Please try again";
+  }
+
+  // Invalid email or username
   if (error_type == "invalid-email" || error_type == "user-not-found") {
     error_type = "Invalid email or username";
     error_msg = "Please try again";
