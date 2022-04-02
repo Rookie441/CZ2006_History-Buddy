@@ -113,7 +113,7 @@ class _StepCounterState extends State<StepCounter> {
          CollectionReference userinfo = FirebaseFirestore.instance.collection('userinfo');
          userinfo.doc(Uemail).update(
              {'quitsteps': int.parse(_steps),
-               'steps': today,});
+               'steps': gettoday(),});
          Navigator.pop(context);
         }
         ),
@@ -123,7 +123,7 @@ class _StepCounterState extends State<StepCounter> {
         floatingActionButton: FloatingActionButton.extended(
            onPressed: () {
                CollectionReference userinfo = FirebaseFirestore.instance.collection('userinfo');
-               userinfo.doc(Uemail).update({'quitsteps': int.parse(_steps), 'steps': today,});
+               userinfo.doc(Uemail).update({'quitsteps': int.parse(_steps), 'steps': gettoday(),});
                Navigator.pop(context);},
           label: const Text('Stop Counting'),
             backgroundColor: Colors.teal[200],
@@ -138,7 +138,7 @@ class _StepCounterState extends State<StepCounter> {
               style: TextStyle(fontSize: 30),
            ),
               Text(
-              today.toString(),
+                gettoday().toString(),
               style: TextStyle(fontSize: 60),
               ),
               Divider(
