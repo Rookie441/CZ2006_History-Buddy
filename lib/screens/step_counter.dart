@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:pedometer/pedometer.dart';
 import 'package:history_buddy/HistSite.dart';
-import 'package:maps_toolkit/maps_toolkit.dart' as m;
 import '../pages/mainmenu.dart';
+import 'package:flutter_activity_recognition/flutter_activity_recognition.dart';
+import 'dart:developer' as dev;
 
 final _firestore = FirebaseFirestore.instance;
 
@@ -14,7 +15,6 @@ String formatDate(DateTime d) {
 
 class StepCounter extends StatefulWidget {
   StepCounter({required this.histsite});
-
   final HistSite histsite;
   @override
   _StepCounterState createState() => _StepCounterState();
@@ -22,9 +22,6 @@ class StepCounter extends StatefulWidget {
 
 class _StepCounterState extends State<StepCounter> {
   String email = MainMenuState.loggedInUser.email.toString();
-  late m.LatLng _center = m.LatLng(
-      widget.histsite.getCoordinates()[1], widget.histsite.getCoordinates()[0]);
-  late List<m.LatLng> PolygonCoords;
   late Stream<StepCount> _stepCountStream;
   late Stream<PedestrianStatus> _pedestrianStatusStream;
   late StreamSubscription _stepCountStreamSubscription;
@@ -33,11 +30,30 @@ class _StepCounterState extends State<StepCounter> {
   int stepsData = 0;
   late int stepsRecord;
 
+
   @override
   void initState() {
     super.initState();
     initPlatformState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      final activityRecognition = FlutterActivityRecognition.instance;
+
+      // Check if the user has granted permission. If not, request permission.
+      PermissionRequestResult reqResult;
+      reqResult = await activityRecognition.checkPermission();
+      if (reqResult == PermissionRequestResult.PERMANENTLY_DENIED) {
+        dev.log('Permission is permanently denied.');
+        return;
+      } else if (reqResult == PermissionRequestResult.DENIED) {
+        reqResult = await activityRecognition.requestPermission();
+        if (reqResult != PermissionRequestResult.GRANTED) {
+          dev.log('Permission is denied.');
+          return;
+        }
+      }
+    });
   }
+
 
   Future getSteps() async {
     await FirebaseFirestore.instance
@@ -54,13 +70,14 @@ class _StepCounterState extends State<StepCounter> {
   }
 
   void onStepCount(StepCount event) async {
-    await getSteps();
-    if (stepsRecord != null) {
-      setState(() {
-        _steps = (int.parse(event.steps.toString()) - stepsRecord).toString();
-        stepsData = int.parse(_steps);
-      });
-    }
+      await getSteps();
+      if (stepsRecord != null) {
+        setState(() {
+          _steps = (int.parse(event.steps.toString()) - stepsRecord).toString();
+          stepsData = int.parse(_steps);
+        });
+      }
+
   }
 
   void onPedestrianStatusChanged(PedestrianStatus event) {
