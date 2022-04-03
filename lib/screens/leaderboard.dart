@@ -11,6 +11,7 @@ class leaderboardPage extends StatefulWidget {
 
 class _leaderboardPageState extends State<leaderboardPage> {
   List usernameList = [];
+  List friendList = [];
   var dataMap = {};
   var dataFilter = 'steps';
   var viewFilter = 'global';
@@ -32,7 +33,7 @@ class _leaderboardPageState extends State<leaderboardPage> {
       });
     });
     friendList.add(username); //add self
-    this.usernameList = friendList;
+    this.friendList = friendList;
     setState(() {});
   }
 
@@ -56,16 +57,18 @@ class _leaderboardPageState extends State<leaderboardPage> {
 
           if (viewFilter == 'friends') {
             getFriendList();
+            List usernameList = [];
             for (var document in data) {
-              for (String user in this.usernameList) {
-                try {
-                  if (user == document.get('username'))
-                    dataMap[user] = document.get(dataFilter);
-                } catch (e) {
-                  print(e);
+              try {
+                if (friendList.contains(document.get('username'))) {
+                  dataMap[document.get('username')] = document.get(dataFilter);
+                  usernameList.add(document.get('username'));
                 }
+              } catch (e) {
+                print(e);
               }
             }
+            this.usernameList = usernameList;
           } else {
             List usernameList = [];
             for (var document in data) {
