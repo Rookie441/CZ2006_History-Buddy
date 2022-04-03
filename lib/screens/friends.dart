@@ -51,7 +51,6 @@ class _friendsPageState extends State<friendsPage> {
 
   Future<void> getRequestList() async {
     List<String> requestList = [];
-    // todo: wrap in try block
     await _firestore
         .collection('userinfo')
         .get()
@@ -108,7 +107,7 @@ class _friendsPageState extends State<friendsPage> {
         builder: (context, snapshot) {
           return Scaffold(
             resizeToAvoidBottomInset:
-                false, //also include this in home.dart because bottom navigation bar will cause pixel overflow
+            false, //also include this in home.dart because bottom navigation bar will cause pixel overflow
             backgroundColor: Colors.white70,
             body: Center(
               child: Column(
@@ -135,18 +134,18 @@ class _friendsPageState extends State<friendsPage> {
                             try {
                               if (friendUsername == username) {
                                 Alert(
-                                        context: context,
-                                        title: "Error",
-                                        desc: "Cannot add yourself")
+                                    context: context,
+                                    title: "Error",
+                                    desc: "Cannot add yourself")
                                     .show();
                                 return;
                                 //Check if request to be sent is already your friend
                               } else if (friendList.contains(friendUsername)) {
                                 Alert(
-                                        context: context,
-                                        title: "Error",
-                                        desc:
-                                            "User is already in your friendlist")
+                                    context: context,
+                                    title: "Error",
+                                    desc:
+                                    "User is already in your friendlist")
                                     .show();
                                 return;
                               }
@@ -167,22 +166,22 @@ class _friendsPageState extends State<friendsPage> {
                                         .doc(friendEmail)
                                         .update({
                                       "requests":
-                                          FieldValue.arrayUnion(requestList)
+                                      FieldValue.arrayUnion(requestList)
                                     }); //union set, no duplicates, no same username anyways
                                     Alert(
-                                            context: context,
-                                            title: "Success",
-                                            desc:
-                                                "Friend request sent to '$friendUsername'")
+                                        context: context,
+                                        title: "Success",
+                                        desc:
+                                        "Friend request sent to '$friendUsername'")
                                         .show();
                                   }
                                 });
                               });
                               if (!validFriendUsername) {
                                 Alert(
-                                        context: context,
-                                        title: "Error",
-                                        desc: "Username does not exist")
+                                    context: context,
+                                    title: "Error",
+                                    desc: "Username does not exist")
                                     .show();
                               }
                             } catch (e) {
@@ -191,13 +190,13 @@ class _friendsPageState extends State<friendsPage> {
                               txtController.clear();
                               friendUsername = "";
                               setState(
-                                  () {}); //refresh state and show added-new-user immediately on widget
+                                      () {}); //refresh state and show added-new-user immediately on widget
                             }
                           },
                         ),
                         hintText: "Add friend by username",
                         hintStyle:
-                            TextStyle(fontSize: 15.0, color: Colors.grey),
+                        TextStyle(fontSize: 15.0, color: Colors.grey),
                         contentPadding: EdgeInsets.symmetric(
                             vertical: 10.0, horizontal: 20.0),
                         border: OutlineInputBorder(
@@ -258,7 +257,7 @@ class _friendsPageState extends State<friendsPage> {
                                           .doc(email)
                                           .update({
                                         "requests":
-                                            FieldValue.arrayRemove(newRequest)
+                                        FieldValue.arrayRemove(newRequest)
                                       });
                                       getRequestList();
                                       //update my friends
@@ -269,7 +268,7 @@ class _friendsPageState extends State<friendsPage> {
                                           .doc(email)
                                           .update({
                                         "friends":
-                                            FieldValue.arrayUnion(newFriend)
+                                        FieldValue.arrayUnion(newFriend)
                                       });
                                       getFriendList();
                                       setState(() {});
@@ -313,7 +312,7 @@ class _friendsPageState extends State<friendsPage> {
                                             .doc(email)
                                             .update({
                                           "requests":
-                                              FieldValue.arrayRemove(newRequest)
+                                          FieldValue.arrayRemove(newRequest)
                                         });
                                         getRequestList();
                                         setState(() {});
@@ -325,12 +324,15 @@ class _friendsPageState extends State<friendsPage> {
                               ).show();
                             },
                             leading: CircleAvatar(
-                              backgroundImage: AssetImage("images/Avatar.png"),
+                              child: Text(friend
+                                  .toString()
+                                  .substring(0, 1)
+                                  .toUpperCase()),
                             ),
                             title: Text(friend),
                             //ternary operator introduced because widget may attempt creation before requestNameList is updated (may be null) -> Forced a setstate for all get functions but implemented just in case
                             subtitle: requestNameList[friend] != null
-                                //Real name displayed here
+                            //Real name displayed here
                                 ? Text(requestNameList[friend])
                                 : Text(""),
                           ),
@@ -379,7 +381,7 @@ class _friendsPageState extends State<friendsPage> {
                                           .doc(email)
                                           .update({
                                         "friends":
-                                            FieldValue.arrayRemove(removeFriend)
+                                        FieldValue.arrayRemove(removeFriend)
                                       });
                                       getFriendList();
                                       setState(() {});
@@ -420,12 +422,15 @@ class _friendsPageState extends State<friendsPage> {
                               ).show();
                             },
                             leading: CircleAvatar(
-                              backgroundImage: AssetImage("images/Avatar.png"),
+                              child: Text(friend
+                                  .toString()
+                                  .substring(0, 1)
+                                  .toUpperCase()),
                             ),
                             title: Text(friend),
                             //ternary operator introduced because widget may attempt creation before friendNameList is updated (may be null) -> Forced a setstate for all get functions but implemented just in case
                             subtitle: friendNameList[friend] != null
-                                //Real name displayed here
+                            //Real name displayed here
                                 ? Text(friendNameList[friend])
                                 : Text(""),
                           ),
