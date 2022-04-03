@@ -1,11 +1,10 @@
-import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:pedometer/pedometer.dart';
 import 'package:history_buddy/HistSite.dart';
-import 'package:jiffy/jiffy.dart';
-import 'package:hive/hive.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:maps_toolkit/maps_toolkit.dart' as m;
+
 import '../pages/mainmenu.dart';
 
 String formatDate(DateTime d) {
@@ -13,26 +12,25 @@ String formatDate(DateTime d) {
 }
 
 class StepCounter extends StatefulWidget {
-  const StepCounter({Key? key, required this.histsite}) : super(key: key);
+  StepCounter({required this.histsite});
+
   final HistSite histsite;
   @override
   _StepCounterState createState() => _StepCounterState();
 }
 
 class _StepCounterState extends State<StepCounter> {
+  String email = MainMenuState.loggedInUser.email.toString();
+  late m.LatLng _center = m.LatLng(
+      widget.histsite.getCoordinates()[1], widget.histsite.getCoordinates()[0]);
+  late List<m.LatLng> PolygonCoords;
   late Stream<StepCount> _stepCountStream;
   late Stream<PedestrianStatus> _pedestrianStatusStream;
+  late StreamSubscription _stepCountStreamSubscription;
+  late StreamSubscription _pedestrianStatusStreamSubscription;
   String _status = '?', _steps = '?';
-  late int todaySteps;
-  late int quit;
-  static int today = 0;
-  String Uemail = MainMenuState.loggedInUser.email.toString();
-
-  void main() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    await Hive.openBox<int>('steps');
-    await Firebase.initializeApp();
-  }
+  int stepsData = 0;
+  late int stepsRecord;
 
   @override
   void initState() {
@@ -40,11 +38,28 @@ class _StepCounterState extends State<StepCounter> {
     initPlatformState();
   }
 
-  void onStepCount(StepCount event) {
-    print(event);
-    setState(() {
-      _steps = event.steps.toString();
+  Future getSteps() async {
+    await FirebaseFirestore.instance
+        .collection('userinfo')
+        .get()
+        .then((QuerySnapshot querySnapshot) {
+      querySnapshot.docs.forEach((doc) {
+        //this is not expensive
+        if (email == doc.id.toLowerCase()) {
+          stepsRecord = doc["steps"];
+        }
+      });
     });
+  }
+
+  void onStepCount(StepCount event) async {
+    await getSteps();
+    if (stepsRecord != null) {
+      setState(() {
+        _steps = (int.parse(event.steps.toString()) - stepsRecord).toString();
+        stepsData = int.parse(_steps);
+      });
+    }
   }
 
   void onPedestrianStatusChanged(PedestrianStatus event) {
@@ -71,151 +86,101 @@ class _StepCounterState extends State<StepCounter> {
 
   void initPlatformState() {
     _pedestrianStatusStream = Pedometer.pedestrianStatusStream;
-    _pedestrianStatusStream
-        .listen(onPedestrianStatusChanged)
-        .onError(onPedestrianStatusError);
+    _pedestrianStatusStreamSubscription = _pedestrianStatusStream.listen(
+        onPedestrianStatusChanged,
+        onError: onPedestrianStatusError,
+        cancelOnError: true);
 
     _stepCountStream = Pedometer.stepCountStream;
-    _stepCountStream.listen(onStepCount).onError(onStepCountError);
+    _stepCountStreamSubscription = _stepCountStream.listen(
+      onStepCount,
+      onError: onStepCountError,
+      cancelOnError: true,
+    );
 
     if (!mounted) return;
   }
 
-  Future<int> getquit() async {
-    await FirebaseFirestore.instance
-        .collection('userinfo')
-        .get()
-        .then((QuerySnapshot querySnapshot) {
-      querySnapshot.docs.forEach((doc) {
-        //this is not expensive
-        if (Uemail == doc.id.toLowerCase()) {
-          quit = doc["quitsteps"];
-        }
-      });
-    });
-    return quit;
-  }
-
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () async {
-                CollectionReference userinfo =
-                    await FirebaseFirestore.instance.collection('userinfo');
-                userinfo.doc(Uemail).update({
-                  'quitsteps': int.parse(_steps),
-                  'steps': gettoday(),
-                });
-                Navigator.pop(context);
-              }),
-          title: const Text('Pedometer'),
-          backgroundColor: Colors.teal[200],
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () async {
-            CollectionReference userinfo =
-                await FirebaseFirestore.instance.collection('userinfo');
-            userinfo.doc(Uemail).update({
-              'quitsteps': int.parse(_steps),
-              'steps': gettoday(),
-            });
-            Navigator.pop(context);
-          },
-          label: const Text('Stop Counting'),
-          backgroundColor: Colors.teal[200],
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                'Steps taken:',
-                style: TextStyle(fontSize: 30),
-              ),
-              Text(
-                gettoday().toString(),
-                style: TextStyle(fontSize: 60),
-              ),
-              Divider(
-                height: 100,
-                thickness: 0,
-                color: Colors.white,
-              ),
-              Text(
-                'Pedestrian status:',
-                style: TextStyle(fontSize: 30),
-              ),
-              Icon(
-                _status == 'walking'
-                    ? Icons.directions_walk
-                    : _status == 'stopped'
-                        ? Icons.accessibility_new
-                        : Icons.error,
-                size: 100,
-              ),
-              Center(
-                child: Text(
-                  _status,
-                  style: _status == 'walking' || _status == 'stopped'
-                      ? TextStyle(fontSize: 30)
-                      : TextStyle(fontSize: 20, color: Colors.red),
+    return FutureBuilder(
+        future: Future.wait([getSteps()]),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              home: Scaffold(
+                appBar: AppBar(
+                  automaticallyImplyLeading: false,
+                  title: const Text('Pedometer'),
+                  backgroundColor: Colors.teal[200],
                 ),
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+                floatingActionButton: FloatingActionButton.extended(
+                  onPressed: () {
+                    CollectionReference userinfo =
+                        FirebaseFirestore.instance.collection('userinfo');
+                    userinfo
+                        .doc(email)
+                        .update({'steps': FieldValue.increment(stepsData)});
+                    _stepCountStreamSubscription.cancel();
+                    _pedestrianStatusStreamSubscription.cancel();
 
-  Future<int> gettoday() async {
-    today = await getTodaySteps(int.parse(_steps));
-    return today;
-  }
-
-  Future<int> getTodaySteps(int value) async {
-    Box<int> stepsBox = Hive.box('steps');
-    print(value);
-    int savedStepsCountKey = 999999;
-    int? savedStepsCount = stepsBox.get(savedStepsCountKey, defaultValue: 0);
-
-    int todayDayNo = Jiffy(DateTime.now()).dayOfYear;
-    if (value < savedStepsCount!) {
-      // Upon device reboot, pedometer resets. When this happens, the saved counter must be reset as well.
-      savedStepsCount = 0;
-      // persist this value using a package of your choice here
-      stepsBox.put(savedStepsCountKey, savedStepsCount);
-    }
-
-    // load the last day saved using a package of your choice here
-    int lastDaySavedKey = 888888;
-    int? lastDaySaved = stepsBox.get(lastDaySavedKey, defaultValue: 0);
-
-    // When the day changes, reset the daily steps count
-    // and Update the last day saved as the day changes.
-    if (lastDaySaved! < todayDayNo) {
-      lastDaySaved = todayDayNo;
-      savedStepsCount = value;
-
-      stepsBox
-        ..put(lastDaySavedKey, lastDaySaved)
-        ..put(savedStepsCountKey, savedStepsCount);
-    }
-
-    setState(() async {
-      todaySteps = value - savedStepsCount!;
-      int tempquit = await getquit();
-      int temp = value - tempquit;
-      if (tempquit != 0) {
-        todaySteps -= temp;
-      }
-    });
-    stepsBox.put(todayDayNo, todaySteps);
-    return todaySteps; // this is your daily steps value.
+                    Navigator.pop(context);
+                  },
+                  label: const Text('Stop Counting'),
+                  backgroundColor: Colors.teal[200],
+                ),
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text(
+                        'Steps taken:',
+                        style: TextStyle(fontSize: 30),
+                      ),
+                      Text(
+                        stepsData.toString(),
+                        style: TextStyle(fontSize: 60),
+                      ),
+                      Divider(
+                        height: 100,
+                        thickness: 0,
+                        color: Colors.white,
+                      ),
+                      Text(
+                        'Pedestrian status:',
+                        style: TextStyle(fontSize: 30),
+                      ),
+                      Icon(
+                        _status == 'walking'
+                            ? Icons.directions_walk
+                            : _status == 'stopped'
+                                ? Icons.accessibility_new
+                                : Icons.error,
+                        size: 100,
+                      ),
+                      Center(
+                        child: Text(
+                          _status,
+                          style: _status == 'walking' || _status == 'stopped'
+                              ? TextStyle(fontSize: 30)
+                              : TextStyle(fontSize: 20, color: Colors.red),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            );
+          } else {
+            return Scaffold(
+              body: Center(
+                child: Text(
+                  "Loading...",
+                ),
+              ),
+            );
+          }
+        });
   }
 }
