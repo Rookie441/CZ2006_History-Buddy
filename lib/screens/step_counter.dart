@@ -4,8 +4,9 @@ import 'dart:async';
 import 'package:pedometer/pedometer.dart';
 import 'package:history_buddy/HistSite.dart';
 import 'package:maps_toolkit/maps_toolkit.dart' as m;
-
 import '../pages/mainmenu.dart';
+
+final _firestore = FirebaseFirestore.instance;
 
 String formatDate(DateTime d) {
   return d.toString().substring(0, 19);
@@ -101,73 +102,104 @@ class _StepCounterState extends State<StepCounter> {
     if (!mounted) return;
   }
 
+  Future<bool> _onWillPop() async {
+    return (await showDialog(
+          context: context,
+          builder: (context) => new AlertDialog(
+            title: new Text('Confirm?'),
+            content: new Text('Confirm to stop steps tracking?'),
+            actions: <Widget>[
+              FlatButton(
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                  _stepCountStreamSubscription.cancel();
+                  _pedestrianStatusStreamSubscription.cancel();
+                },
+                child: new Text('Yes'),
+              ),
+              FlatButton(
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+                child: new Text('No'),
+              ),
+            ],
+          ),
+        )) ??
+        false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
         future: Future.wait([getSteps()]),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return MaterialApp(
-              debugShowCheckedModeBanner: false,
-              home: Scaffold(
-                appBar: AppBar(
-                  automaticallyImplyLeading: false,
-                  title: const Text('Pedometer'),
-                  backgroundColor: Colors.teal[200],
-                ),
-                floatingActionButton: FloatingActionButton.extended(
-                  onPressed: () {
-                    CollectionReference userinfo =
-                        FirebaseFirestore.instance.collection('userinfo');
-                    userinfo
-                        .doc(email)
-                        .update({'steps': FieldValue.increment(stepsData)});
-                    _stepCountStreamSubscription.cancel();
-                    _pedestrianStatusStreamSubscription.cancel();
+            return WillPopScope(
+              onWillPop: _onWillPop,
+              child: MaterialApp(
+                debugShowCheckedModeBanner: false,
+                home: Scaffold(
+                  appBar: AppBar(
+                    automaticallyImplyLeading: false,
+                    title: const Text('Pedometer'),
+                    backgroundColor: Colors.teal[200],
+                  ),
+                  floatingActionButton: FloatingActionButton.extended(
+                    onPressed: () {
+                      _firestore
+                          .collection('userinfo')
+                          .doc(email)
+                          .update({'steps': FieldValue.increment(stepsData)});
+                      _firestore.collection('userinfo').doc(email).update(
+                          {'calories': FieldValue.increment(stepsData * 0.44)});
+                      _stepCountStreamSubscription.cancel();
+                      _pedestrianStatusStreamSubscription.cancel();
 
-                    Navigator.pop(context);
-                  },
-                  label: const Text('Stop Counting'),
-                  backgroundColor: Colors.teal[200],
-                ),
-                body: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Text(
-                        'Steps taken:',
-                        style: TextStyle(fontSize: 30),
-                      ),
-                      Text(
-                        stepsData.toString(),
-                        style: TextStyle(fontSize: 60),
-                      ),
-                      Divider(
-                        height: 100,
-                        thickness: 0,
-                        color: Colors.white,
-                      ),
-                      Text(
-                        'Pedestrian status:',
-                        style: TextStyle(fontSize: 30),
-                      ),
-                      Icon(
-                        _status == 'walking'
-                            ? Icons.directions_walk
-                            : _status == 'stopped'
-                                ? Icons.accessibility_new
-                                : Icons.error,
-                        size: 100,
-                      ),
-                      Center(
-                        child: Text(
-                          _status,
-                          style: _status == 'walking' || _status == 'stopped'
-                              ? TextStyle(fontSize: 30)
-                              : TextStyle(fontSize: 20, color: Colors.red),
+                      Navigator.pop(context);
+                    },
+                    label: const Text('Stop Counting'),
+                    backgroundColor: Colors.teal[200],
+                  ),
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          'Steps taken:',
+                          style: TextStyle(fontSize: 30),
                         ),
-                      )
-                    ],
+                        Text(
+                          stepsData.toString(),
+                          style: TextStyle(fontSize: 60),
+                        ),
+                        Divider(
+                          height: 100,
+                          thickness: 0,
+                          color: Colors.white,
+                        ),
+                        Text(
+                          'Pedestrian status:',
+                          style: TextStyle(fontSize: 30),
+                        ),
+                        Icon(
+                          _status == 'walking'
+                              ? Icons.directions_walk
+                              : _status == 'stopped'
+                                  ? Icons.accessibility_new
+                                  : Icons.error,
+                          size: 100,
+                        ),
+                        Center(
+                          child: Text(
+                            _status,
+                            style: _status == 'walking' || _status == 'stopped'
+                                ? TextStyle(fontSize: 30)
+                                : TextStyle(fontSize: 20, color: Colors.red),
+                          ),
+                        )
+                      ],
+                    ),
                   ),
                 ),
               ),

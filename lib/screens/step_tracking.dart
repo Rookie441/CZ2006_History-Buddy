@@ -117,6 +117,7 @@ class _StepTrackingState extends State<StepTracking> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return MaterialApp(
+              debugShowCheckedModeBanner: false,
               home: Scaffold(
                 appBar: AppBar(
                   leading: IconButton(

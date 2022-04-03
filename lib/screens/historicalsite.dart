@@ -127,18 +127,16 @@ class _historicalsiteState extends State<historicalsite> {
   }
 
   // initialise the state of the UI
-  // call asyncLoad function to initialise the historical sites data
   @override
   void initState() {
     super.initState();
-    // asyncLoad();
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
         future: Future.wait([
-          asyncLoad(),
+          asyncLoad(), // call asyncLoad function to initialise the historical sites data
         ]),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
@@ -188,15 +186,7 @@ class _historicalsiteState extends State<historicalsite> {
                                   child: Text(historicalsite
                                       .sortedHistSites[index]
                                       .getDesc()),
-                                  //maxLines: 3,
-                                  //overflow: TextOverflow.ellipsis),
                                 ),
-                                //Padding(
-                                //padding: EdgeInsets.only(top: 8.0),
-                                //child: <Widget>[
-                                //starWidget(),
-                                //],
-                                // )
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.start,

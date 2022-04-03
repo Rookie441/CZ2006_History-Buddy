@@ -83,7 +83,6 @@ class _leaderboardPageState extends State<leaderboardPage> {
             backgroundColor: Colors.brown[200],
             body: RefreshIndicator(
               onRefresh: () async {
-                print("refreshed");
                 setState(() {});
               },
               child: ListView(
@@ -147,8 +146,7 @@ class _leaderboardPageState extends State<leaderboardPage> {
                               },
                               items: <String>[
                                 'steps',
-                                'calories',
-                                'quitsteps'
+                                'calories'
                               ].map<DropdownMenuItem<String>>((String value) {
                                 return DropdownMenuItem<String>(
                                   value: value,
