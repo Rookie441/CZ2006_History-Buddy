@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_activity_recognition/flutter_activity_recognition.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:history_buddy/HistSite.dart';
 import 'package:history_buddy/screens/step_counter.dart';
@@ -55,6 +56,15 @@ class _StepTrackingState extends State<StepTracking> {
     // TODO: implement initState
     super.initState();
     getUserLocation();
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      final activityRecognition = FlutterActivityRecognition.instance;
+
+      // Check if the user has granted permission. If not, request permission.
+      PermissionRequestResult reqResult;
+      reqResult = await activityRecognition.checkPermission();
+      while (reqResult != PermissionRequestResult.GRANTED)
+        reqResult = await activityRecognition.requestPermission();
+    });
   }
 
   Future<Position> locateUser() async {
