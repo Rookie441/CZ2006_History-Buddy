@@ -1,48 +1,83 @@
-import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:pedometer/pedometer.dart';
 import 'package:history_buddy/HistSite.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../pages/mainmenu.dart';
+import 'package:flutter_activity_recognition/flutter_activity_recognition.dart';
+import 'dart:developer' as dev;
 
+final _firestore = FirebaseFirestore.instance;
+
+String formatDate(DateTime d) {
+  return d.toString().substring(0, 19);
+}
 
 class StepCounter extends StatefulWidget {
-  const StepCounter({Key? key,required this.histsite}) : super(key: key);
+  StepCounter({required this.histsite});
   final HistSite histsite;
   @override
   _StepCounterState createState() => _StepCounterState();
 }
 
-
 class _StepCounterState extends State<StepCounter> {
+  String email = MainMenuState.loggedInUser.email.toString();
   late Stream<StepCount> _stepCountStream;
   late Stream<PedestrianStatus> _pedestrianStatusStream;
-  String _status = '?',
-      _steps = '?';
-  late int quit;
-  late int today;
-  String Uemail = MainMenuState.loggedInUser.email.toString();
+  late StreamSubscription _stepCountStreamSubscription;
+  late StreamSubscription _pedestrianStatusStreamSubscription;
+  String _status = '?', _steps = '?';
+  int stepsData = 0;
+  late int stepsRecord;
 
-
-  void main() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp();
-    getquit();
-  }
 
   @override
   void initState() {
     super.initState();
     initPlatformState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      final activityRecognition = FlutterActivityRecognition.instance;
+
+      // Check if the user has granted permission. If not, request permission.
+      PermissionRequestResult reqResult;
+      reqResult = await activityRecognition.checkPermission();
+      if (reqResult == PermissionRequestResult.PERMANENTLY_DENIED) {
+        dev.log('Permission is permanently denied.');
+        return;
+      } else if (reqResult == PermissionRequestResult.DENIED) {
+        reqResult = await activityRecognition.requestPermission();
+        if (reqResult != PermissionRequestResult.GRANTED) {
+          dev.log('Permission is denied.');
+          return;
+        }
+      }
+    });
   }
 
 
-  void onStepCount(StepCount event) {
-    print(event);
-    setState(() {
-      _steps = event.steps.toString();
+  Future getSteps() async {
+    await FirebaseFirestore.instance
+        .collection('userinfo')
+        .get()
+        .then((QuerySnapshot querySnapshot) {
+      querySnapshot.docs.forEach((doc) {
+        //this is not expensive
+        if (email == doc.id.toLowerCase()) {
+          stepsRecord = doc["steps"];
+        }
+      });
     });
+  }
+
+  void onStepCount(StepCount event) async {
+      await getSteps();
+      if (stepsRecord != null) {
+        setState(() {
+          _steps = (int.parse(event.steps.toString()) - stepsRecord).toString();
+          stepsData = int.parse(_steps);
+        });
+      }
+
   }
 
   void onPedestrianStatusChanged(PedestrianStatus event) {
@@ -69,123 +104,132 @@ class _StepCounterState extends State<StepCounter> {
 
   void initPlatformState() {
     _pedestrianStatusStream = Pedometer.pedestrianStatusStream;
-    _pedestrianStatusStream
-        .listen(onPedestrianStatusChanged)
-        .onError(onPedestrianStatusError);
+    _pedestrianStatusStreamSubscription = _pedestrianStatusStream.listen(
+        onPedestrianStatusChanged,
+        onError: onPedestrianStatusError,
+        cancelOnError: true);
 
     _stepCountStream = Pedometer.stepCountStream;
-    _stepCountStream.listen(onStepCount).onError(onStepCountError);
+    _stepCountStreamSubscription = _stepCountStream.listen(
+      onStepCount,
+      onError: onStepCountError,
+      cancelOnError: true,
+    );
 
     if (!mounted) return;
   }
 
-  Future<int> getquit() async {
-    await FirebaseFirestore.instance
-        .collection('userinfo')
-        .get()
-        .then((QuerySnapshot querySnapshot) {
-      querySnapshot.docs.forEach((doc) {
-        //this is not expensive
-        if (Uemail == doc.id.toLowerCase()) {
-          quit = doc["quitsteps"];
-        }
-      });
-    });
-    return quit;
+  Future<bool> _onWillPop() async {
+    return (await showDialog(
+          context: context,
+          builder: (context) => new AlertDialog(
+            title: new Text('Confirm?'),
+            content: new Text('Confirm to stop steps tracking?'),
+            actions: <Widget>[
+              FlatButton(
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                  _stepCountStreamSubscription.cancel();
+                  _pedestrianStatusStreamSubscription.cancel();
+                },
+                child: new Text('Yes'),
+              ),
+              FlatButton(
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+                child: new Text('No'),
+              ),
+            ],
+          ),
+        )) ??
+        false;
   }
-
-  Future<int> getsteps() async {
-    await FirebaseFirestore.instance
-        .collection('userinfo')
-        .get()
-        .then((QuerySnapshot querySnapshot) {
-      querySnapshot.docs.forEach((doc) {
-        //this is not expensive
-        if (Uemail == doc.id.toLowerCase()) {
-          today = doc["steps"];
-        }
-      });
-    });
-    return today;
-  }
-
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () {
-                getsteps();
-                CollectionReference userinfo = FirebaseFirestore.instance
-                    .collection('userinfo');
-                userinfo.doc(Uemail).update(
-                    {'quitsteps': int.parse(_steps),
-                      'steps': today + int.parse(_steps) - quit,});
-                Navigator.pop(context);
-              }
-          ),
-          title: const Text('Pedometer'),
-          backgroundColor: Colors.teal[200],
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
-            CollectionReference userinfo = FirebaseFirestore.instance
-                .collection('userinfo');
-            userinfo.doc(Uemail).update(
-                {'quitsteps': int.parse(_steps), 'steps': today + int.parse(_steps) - quit,});
-            Navigator.pop(context);
-          },
-          label: const Text('Stop Counting'),
-          backgroundColor: Colors.teal[200],
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                'Steps taken:',
-                style: TextStyle(fontSize: 30),
-              ),
-              Text(
-                (int.parse(_steps)- quit).toString(),
-                style: TextStyle(fontSize: 60),
-              ),
-              Divider(
-                height: 100,
-                thickness: 0,
-                color: Colors.white,
-              ),
-              Text(
-                'Pedestrian status:',
-                style: TextStyle(fontSize: 30),
-              ),
-              Icon(
-                _status == 'walking'
-                    ? Icons.directions_walk
-                    : _status == 'stopped'
-                    ? Icons.accessibility_new
-                    : Icons.error,
-                size: 100,
-              ),
-              Center(
-                child: Text(
-                  _status,
-                  style: _status == 'walking' || _status == 'stopped'
-                      ? TextStyle(fontSize: 30)
-                      : TextStyle(fontSize: 20, color: Colors.red),
+    return FutureBuilder(
+        future: Future.wait([getSteps()]),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return WillPopScope(
+              onWillPop: _onWillPop,
+              child: MaterialApp(
+                debugShowCheckedModeBanner: false,
+                home: Scaffold(
+                  appBar: AppBar(
+                    automaticallyImplyLeading: false,
+                    title: const Text('Pedometer'),
+                    backgroundColor: Colors.teal[200],
+                  ),
+                  floatingActionButton: FloatingActionButton.extended(
+                    onPressed: () {
+                      _firestore
+                          .collection('userinfo')
+                          .doc(email)
+                          .update({'steps': FieldValue.increment(stepsData)});
+                      _firestore.collection('userinfo').doc(email).update(
+                          {'calories': FieldValue.increment(stepsData * 0.44)});
+                      _stepCountStreamSubscription.cancel();
+                      _pedestrianStatusStreamSubscription.cancel();
+
+                      Navigator.pop(context);
+                    },
+                    label: const Text('Stop Counting'),
+                    backgroundColor: Colors.teal[200],
+                  ),
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          'Steps taken:',
+                          style: TextStyle(fontSize: 30),
+                        ),
+                        Text(
+                          stepsData.toString(),
+                          style: TextStyle(fontSize: 60),
+                        ),
+                        Divider(
+                          height: 100,
+                          thickness: 0,
+                          color: Colors.white,
+                        ),
+                        Text(
+                          'Pedestrian status:',
+                          style: TextStyle(fontSize: 30),
+                        ),
+                        Icon(
+                          _status == 'walking'
+                              ? Icons.directions_walk
+                              : _status == 'stopped'
+                                  ? Icons.accessibility_new
+                                  : Icons.error,
+                          size: 100,
+                        ),
+                        Center(
+                          child: Text(
+                            _status,
+                            style: _status == 'walking' || _status == 'stopped'
+                                ? TextStyle(fontSize: 30)
+                                : TextStyle(fontSize: 20, color: Colors.red),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
                 ),
-              )
-            ],
-          ),
-        ),
-      ),
-    );
+              ),
+            );
+          } else {
+            return Scaffold(
+              body: Center(
+                child: Text(
+                  "Loading...",
+                ),
+              ),
+            );
+          }
+        });
   }
-
 }
-
-
