@@ -199,7 +199,7 @@ class _RegisterState extends State<Register> {
                                   'created': DateTime.now()
                                       .toUtc()
                                       .millisecondsSinceEpoch, //Date of account creation
-                                  'calories': 0,
+                                  'calories': 0.0,
                                   'steps': 0,
                                 });
 
