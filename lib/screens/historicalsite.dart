@@ -141,7 +141,7 @@ class _historicalsiteState extends State<historicalsite> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return Scaffold(
-                backgroundColor: Colors.brown[200],
+                backgroundColor: Colors.brown[100],
                 body: NestedScrollView(
                     floatHeaderSlivers: true,
                     headerSliverBuilder:
@@ -149,10 +149,12 @@ class _historicalsiteState extends State<historicalsite> {
                       return <Widget>[
                         SliverAppBar(
                           elevation: 0,
-                          backgroundColor: Colors.brown[300],
+                          backgroundColor: Colors.brown[200],
                           title: Text("Historical Sites",
-                              style:
-                                  TextStyle(fontSize: 22, color: Colors.white)),
+                              style: TextStyle(
+                                  fontSize: 30,
+                                  color: Colors.black,
+                                  fontFamily: 'Pacifico')),
                           centerTitle: true,
                           expandedHeight: 60.0,
                           floating: false,

@@ -83,7 +83,7 @@ class _leaderboardPageState extends State<leaderboardPage> {
           }
 
           return Scaffold(
-            backgroundColor: Colors.brown[200],
+            backgroundColor: Colors.brown[100],
             body: RefreshIndicator(
               onRefresh: () async {
                 setState(() {});
@@ -174,19 +174,24 @@ class _leaderboardPageState extends State<leaderboardPage> {
                             children: [
                               for (var index in usernameList)
                                 ListTile(
-                                  tileColor: index.toString() == username
-                                      ? Colors.grey
-                                      : Colors.brown[200],
                                   leading: CircleAvatar(
                                     child: Text(index
                                         .toString()
                                         .substring(0, 1)
                                         .toUpperCase()),
                                   ),
-                                  title: Text(index.toString()),
+                                  title: Text(index.toString(),
+                                      style: index.toString() == username
+                                          ? TextStyle(
+                                              fontWeight: FontWeight.bold)
+                                          : TextStyle()),
                                   trailing: Text(
                                     dataMap[index].toString(),
-                                    style: TextStyle(fontSize: 18.0),
+                                    style: index.toString() == username
+                                        ? TextStyle(
+                                            fontSize: 18.0,
+                                            fontWeight: FontWeight.bold)
+                                        : TextStyle(fontSize: 18.0),
                                   ),
                                 ),
                             ],
