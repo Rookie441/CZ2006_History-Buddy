@@ -51,6 +51,7 @@ class _friendsPageState extends State<friendsPage> {
 
   Future<void> getRequestList() async {
     List<String> requestList = [];
+    // todo: wrap in try block
     await _firestore
         .collection('userinfo')
         .get()
@@ -112,6 +113,112 @@ class _friendsPageState extends State<friendsPage> {
             body: Center(
               child: Column(
                 children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15.0, horizontal: 24.0),
+                    child: TextField(
+                      controller: txtController,
+                      maxLength: 30,
+                      keyboardType: TextInputType.visiblePassword,
+                      inputFormatters: [
+                        new FilteringTextInputFormatter(RegExp("[a-zA-Z0-9._]"),
+                            allow: true),
+                      ],
+                      onChanged: (value) {
+                        friendUsername = value;
+                      },
+                      decoration: InputDecoration(
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.search),
+                          onPressed: () async {
+                            // Cannot add yourself as friend
+                            try {
+                              if (friendUsername == username) {
+                                Alert(
+                                        context: context,
+                                        title: "Error",
+                                        desc: "Cannot add yourself")
+                                    .show();
+                                return;
+                                //Check if request to be sent is already your friend
+                              } else if (friendList.contains(friendUsername)) {
+                                Alert(
+                                        context: context,
+                                        title: "Error",
+                                        desc:
+                                            "User is already in your friendlist")
+                                    .show();
+                                return;
+                              }
+
+                              bool validFriendUsername = false;
+                              await _firestore //check username to add exists in database
+                                  .collection('userinfo')
+                                  .get()
+                                  .then((QuerySnapshot querySnapshot) {
+                                querySnapshot.docs.forEach((doc) {
+                                  if (friendUsername == doc["username"]) {
+                                    validFriendUsername = true;
+                                    friendEmail = doc.id;
+                                    requestList.add(username);
+                                    //Change requestList field for friend, do nothing for existing user unless "pending request" is implemented
+                                    _firestore
+                                        .collection('userinfo')
+                                        .doc(friendEmail)
+                                        .update({
+                                      "requests":
+                                          FieldValue.arrayUnion(requestList)
+                                    }); //union set, no duplicates, no same username anyways
+                                    Alert(
+                                            context: context,
+                                            title: "Success",
+                                            desc:
+                                                "Friend request sent to '$friendUsername'")
+                                        .show();
+                                  }
+                                });
+                              });
+                              if (!validFriendUsername) {
+                                Alert(
+                                        context: context,
+                                        title: "Error",
+                                        desc: "Username does not exist")
+                                    .show();
+                              }
+                            } catch (e) {
+                              errorAlert(e, context);
+                            } finally {
+                              txtController.clear();
+                              friendUsername = "";
+                              setState(
+                                  () {}); //refresh state and show added-new-user immediately on widget
+                            }
+                          },
+                        ),
+                        hintText: "Add friend by username",
+                        hintStyle:
+                            TextStyle(fontSize: 15.0, color: Colors.grey),
+                        contentPadding: EdgeInsets.symmetric(
+                            vertical: 10.0, horizontal: 20.0),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(32.0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Colors.lightBlueAccent, width: 1.0),
+                          borderRadius: BorderRadius.all(Radius.circular(32.0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Colors.lightBlueAccent, width: 2.0),
+                          borderRadius: BorderRadius.all(Radius.circular(32.0)),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 12.0,
+                  ),
                   Padding(
                     padding: const EdgeInsets.only(left: 8.0, top: 8.0),
                     child: Row(
@@ -232,93 +339,6 @@ class _friendsPageState extends State<friendsPage> {
                   ),
                   SizedBox(
                     height: 24.0,
-                  ),
-                  TextField(
-                    controller: txtController,
-                    maxLength: 30,
-                    keyboardType: TextInputType.visiblePassword,
-                    inputFormatters: [
-                      new FilteringTextInputFormatter(
-                          RegExp("[a-zA-Z0-9._]"), allow: true),
-                    ],
-                    onChanged: (value) {
-                      friendUsername = value;
-                    },
-                    decoration: buildInputDecoration("Add friend by username"),
-                  ),
-                  RaisedButton(
-                    color: Colors.lightBlue,
-                    child: Column(
-                      children: [
-                        Text('Add'),
-                      ],
-                    ),
-                    onPressed: () async {
-                      // Cannot add yourself as friend
-                      try {
-                        // todo: show spinner
-                        if (friendUsername == username) {
-                          Alert(
-                                  context: context,
-                                  title: "Error",
-                                  desc: "Cannot add yourself")
-                              .show();
-                          return;
-                          //Check if request to be sent is already your friend
-                        } else if (friendList.contains(friendUsername)) {
-                          Alert(
-                                  context: context,
-                                  title: "Error",
-                                  desc: "User is already in your friendlist")
-                              .show();
-                          return;
-                        }
-
-                        bool validFriendUsername = false;
-                        await _firestore //check username to add exists in database
-                            .collection('userinfo')
-                            .get()
-                            .then((QuerySnapshot querySnapshot) {
-                          querySnapshot.docs.forEach((doc) {
-                            if (friendUsername == doc["username"]) {
-                              validFriendUsername = true;
-                              friendEmail = doc.id;
-                              requestList.add(username);
-                              //Change requestList field for friend, do nothing for existing user unless "pending request" is implemented
-                              _firestore
-                                  .collection('userinfo')
-                                  .doc(friendEmail)
-                                  .update({
-                                "requests": FieldValue.arrayUnion(requestList)
-                              }); //union set, no duplicates, no same username anyways
-                              Alert(
-                                      context: context,
-                                      title: "Success",
-                                      desc:
-                                          "Friend request sent to '$friendUsername'")
-                                  .show();
-                            }
-                          });
-                        });
-                        if (!validFriendUsername) {
-                          Alert(
-                                  context: context,
-                                  title: "Error",
-                                  desc: "Username does not exist")
-                              .show();
-                        }
-                      } catch (e) {
-                        errorAlert(e, context);
-                      } finally {
-                        txtController.clear();
-                        friendUsername = "";
-                        setState(
-                            () {}); //refresh state and show added-new-user immediately on widget
-                      }
-                    },
-                  ),
-                  SizedBox(
-                    height: 12.0,
                   ),
                   Padding(
                     padding: const EdgeInsets.only(left: 8.0),

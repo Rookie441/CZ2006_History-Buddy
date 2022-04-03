@@ -57,7 +57,8 @@ class _RegisterState extends State<Register> {
                   keyboardType: TextInputType.visiblePassword,
                   inputFormatters: [
                     //LengthLimitingTextInputFormatter(30), //Length limit without counter
-                    new FilteringTextInputFormatter(RegExp("[a-zA-Z '.-/]"), allow: true),
+                    new FilteringTextInputFormatter(RegExp("[a-zA-Z '.-/]"),
+                        allow: true),
                   ],
                   onChanged: (value) {
                     name = value;
@@ -73,7 +74,8 @@ class _RegisterState extends State<Register> {
                   maxLength: 30,
                   keyboardType: TextInputType.visiblePassword,
                   inputFormatters: [
-                    new FilteringTextInputFormatter(RegExp("[a-zA-Z0-9._]"), allow: true),
+                    new FilteringTextInputFormatter(RegExp("[a-zA-Z0-9._]"),
+                        allow: true),
                   ],
                   onChanged: (value) {
                     username = value;
@@ -102,7 +104,8 @@ class _RegisterState extends State<Register> {
                   maxLength: 320,
                   keyboardType: TextInputType.emailAddress,
                   inputFormatters: [
-                    new FilteringTextInputFormatter(RegExp("[^ ]"), allow: true),
+                    new FilteringTextInputFormatter(RegExp("[^ ]"),
+                        allow: true),
                   ],
                   onChanged: (value) {
                     email = value;
@@ -174,7 +177,12 @@ class _RegisterState extends State<Register> {
                               'username': username,
                               'friends': [],
                               'requests': [],
-                              //'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch, //Date of account creation
+                              'created': DateTime.now()
+                                  .toUtc()
+                                  .millisecondsSinceEpoch, //Date of account creation
+                              'calories': 0,
+                              'steps': 0,
+                              // calories and steps can be stored in another collection and set only when user starts a route
                             });
 
                             Alert(

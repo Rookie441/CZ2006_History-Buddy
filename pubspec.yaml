@@ -12,7 +12,6 @@ dependencies:
   flutter:
     sdk: flutter
   intl: ^0.17.0
-  flutter_localized_locales: ^2.0.3
   shared_preferences: ^2.0.13
   flutter_polyline_points: ^1.0.0
   cupertino_icons: ^1.0.2
@@ -28,8 +27,10 @@ dependencies:
   google_maps_flutter: ^2.1.2
   http: ^0.13.0
   loading_gifs: ^0.3.0
-
-
+  pedometer: ^3.0.0
+  maps_toolkit: ^2.0.0
+  geocoding: ^2.0.4
+  android_intent: ^2.0.2
 
 dev_dependencies:
   flutter_test:

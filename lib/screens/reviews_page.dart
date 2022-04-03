@@ -14,7 +14,7 @@ class ReviewsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(histsite.getName()),
-        backgroundColor: Colors.teal[200],
+        backgroundColor: Colors.brown[200],
         elevation: 0.0,
       ),
       body: _body(context),
@@ -28,7 +28,7 @@ class ReviewsPage extends StatelessWidget {
               )
           );
         },
-        backgroundColor: Colors.teal[200],
+        backgroundColor: Colors.brown[200],
       ),
       );
   }
