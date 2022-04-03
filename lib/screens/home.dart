@@ -14,7 +14,7 @@ class homePage extends StatefulWidget {
 
 class _homePageState extends State<homePage> {
   int steps = 0;
-  double calories = 0;
+  var calories;
 
   final _auth = FirebaseAuth.instance;
   static late User loggedInUser;
@@ -101,7 +101,7 @@ class _homePageState extends State<homePage> {
                                 size: 50,
                               ),
                               Text(
-                                'Calories: $calories',
+                                'Calories: ${calories.toString()}',
                                 style: kHeadingTextStyle,
                               ),
                             ],

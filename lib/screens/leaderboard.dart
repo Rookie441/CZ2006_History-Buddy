@@ -168,7 +168,7 @@ class _leaderboardPageState extends State<leaderboardPage> {
                         endIndent: 5,
                       ),
                       Container(
-                          height: 500,
+                          height: 450,
                           child: ListView(
                             shrinkWrap: true,
                             children: [
