@@ -101,7 +101,7 @@ class _homePageState extends State<homePage> {
                                 size: 50,
                               ),
                               Text(
-                                'Calories: ${calories.toString()}',
+                                'Calories: ${double.parse(calories.toString()).toStringAsFixed(2)}',
                                 style: kHeadingTextStyle,
                               ),
                             ],

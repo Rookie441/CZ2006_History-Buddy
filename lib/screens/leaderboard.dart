@@ -186,7 +186,11 @@ class _leaderboardPageState extends State<leaderboardPage> {
                                               fontWeight: FontWeight.bold)
                                           : TextStyle()),
                                   trailing: Text(
-                                    dataMap[index].toString(),
+                                    dataFilter == 'calories'
+                                        ? double.parse(
+                                                dataMap[index].toString())
+                                            .toStringAsFixed(2)
+                                        : dataMap[index].toString(),
                                     style: index.toString() == username
                                         ? TextStyle(
                                             fontSize: 18.0,
