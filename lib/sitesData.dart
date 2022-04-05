@@ -28,7 +28,7 @@ class SitesData {
     List<HistSite> sortedHistSite = [];
 
     for (HistSite histsite in HistSiteList){
-      double distanceFromUser = getDistance(histsite.getCoordinates()[1], histsite.getCoordinates()[0], userLatitude, userLongitude);
+      double distanceFromUser = getDistance(histsite.getCoordinates()[0], histsite.getCoordinates()[1], userLatitude, userLongitude);
       histsite.setDist(distanceFromUser);
 
       sortedHistSite.add(histsite);
