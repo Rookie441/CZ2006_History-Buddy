@@ -109,6 +109,14 @@ class _StepCounterState extends State<StepCounter> {
                   Navigator.of(context).pop(true);
                   _stepCountStreamSubscription.cancel();
                   _pedestrianStatusStreamSubscription.cancel();
+                  _firestore
+                      .collection('userinfo')
+                      .doc(email)
+                      .update({'steps': FieldValue.increment(stepsData)});
+                  _firestore.collection('userinfo').doc(email).update(
+                      {'calories': FieldValue.increment(stepsData * 0.44)});
+                  _stepCountStreamSubscription.cancel();
+                  _pedestrianStatusStreamSubscription.cancel();
                 },
                 child: new Text('Yes'),
               ),
