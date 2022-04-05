@@ -17,8 +17,8 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _auth = FirebaseAuth.instance;
   bool showSpinner = false;
-  late String login_details;
-  late String password;
+  late String _login_details;
+  late String _password;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
                   keyboardType: TextInputType.emailAddress,
                   textAlign: TextAlign.center,
                   onChanged: (value) {
-                    login_details = value;
+                    _login_details = value;
                   },
                   decoration: buildInputDecoration("Enter your username/email"),
                 ),
@@ -67,7 +67,7 @@ class _LoginPageState extends State<LoginPage> {
                   textAlign: TextAlign.center,
                   obscureText: true,
                   onChanged: (value) {
-                    password = value;
+                    _password = value;
                   },
                   decoration: buildInputDecoration("Enter your password"),
                 ),
@@ -94,14 +94,14 @@ class _LoginPageState extends State<LoginPage> {
                               .get()
                               .then((QuerySnapshot querySnapshot) {
                             querySnapshot.docs.forEach((doc) {
-                              if (login_details == doc["username"]) {
-                                login_details = doc.id;
+                              if (_login_details == doc["username"]) {
+                                _login_details = doc.id;
                               }
                             });
                           });
 
                           final user = await _auth.signInWithEmailAndPassword(
-                              email: login_details, password: password);
+                              email: _login_details, password: _password);
                           if (user != null) {
                             Navigator.pushNamed(context, "/mainmenu");
                           }
@@ -109,6 +109,8 @@ class _LoginPageState extends State<LoginPage> {
                           errorAlert(e, context);
                         } finally {
                           //finish loading, stop spinning
+                          _login_details = "";
+                          _password = "";
                           setState(() {
                             showSpinner = false;
                           });

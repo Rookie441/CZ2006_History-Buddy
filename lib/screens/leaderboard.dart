@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:history_buddy/pages/mainmenu.dart';
 
 final _firestore = FirebaseFirestore.instance;
 
@@ -10,14 +11,38 @@ class leaderboardPage extends StatefulWidget {
 
 class _leaderboardPageState extends State<leaderboardPage> {
   List usernameList = [];
+  List friendList = [];
   var dataMap = {};
+  var dataFilter = 'steps';
+  var viewFilter = 'global';
+  String email = MainMenuState.loggedInUser.email.toString();
+  String username = MainMenuState.username.toString();
+
+  Future<void> getFriendList() async {
+    List<String> friendList = [];
+    await _firestore
+        .collection('userinfo')
+        .get()
+        .then((QuerySnapshot querySnapshot) {
+      querySnapshot.docs.forEach((doc) {
+        if (email == doc.id.toLowerCase()) {
+          for (String friendUsername in doc["friends"]) {
+            friendList.add(friendUsername);
+          }
+        }
+      });
+    });
+    friendList.add(username); //add self
+    this.friendList = friendList;
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
         stream: _firestore
             .collection('userinfo')
-            .orderBy('calories', descending: true)
+            .orderBy(dataFilter, descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
@@ -29,18 +54,38 @@ class _leaderboardPageState extends State<leaderboardPage> {
           }
           final data = snapshot.data!.docs;
           var dataMap = Map();
-          List usernameList = [];
-          for (var document in data) {
-            dataMap[document.get('username')] = document.get('calories');
-            usernameList.add(document.get('username'));
+
+          if (viewFilter == 'friends') {
+            getFriendList();
+            List usernameList = [];
+            for (var document in data) {
+              try {
+                if (friendList.contains(document.get('username'))) {
+                  dataMap[document.get('username')] = document.get(dataFilter);
+                  usernameList.add(document.get('username'));
+                }
+              } catch (e) {
+                print(e);
+              }
+            }
+            this.usernameList = usernameList;
+          } else {
+            List usernameList = [];
+            for (var document in data) {
+              try {
+                dataMap[document.get('username')] = document.get(dataFilter);
+                usernameList.add(document.get('username'));
+              } catch (e) {
+                print(e);
+              }
+            }
+            this.usernameList = usernameList;
           }
-          this.usernameList = usernameList;
 
           return Scaffold(
-            backgroundColor: Colors.brown[200],
+            backgroundColor: Colors.brown[100],
             body: RefreshIndicator(
               onRefresh: () async {
-                print("refreshed");
                 setState(() {});
               },
               child: ListView(
@@ -48,14 +93,36 @@ class _leaderboardPageState extends State<leaderboardPage> {
                   Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
+                        padding: const EdgeInsets.only(left: 10.0, right: 10.0),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
+                            DropdownButton<String>(
+                              value: viewFilter,
+                              style: const TextStyle(
+                                  fontSize: 16.0, color: Colors.deepPurple),
+                              underline: Container(
+                                height: 2,
+                                color: Colors.deepPurpleAccent,
+                              ),
+                              onChanged: (String? newValue) async {
+                                setState(() {
+                                  viewFilter = newValue!;
+                                });
+                              },
+                              items: <String>[
+                                'global',
+                                'friends'
+                              ].map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                            ),
                             Text(
                               "Leaderboard",
-                              textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 30.0,
                                 fontFamily: 'Pacifico',
@@ -65,8 +132,30 @@ class _leaderboardPageState extends State<leaderboardPage> {
                             SizedBox(
                               width: 35.0,
                             ),
-                            Text(
-                              "Calories Burnt",
+                            DropdownButton<String>(
+                              value: dataFilter,
+                              icon: const Icon(Icons.arrow_downward),
+                              elevation: 16,
+                              style: const TextStyle(
+                                  fontSize: 16.0, color: Colors.deepPurple),
+                              underline: Container(
+                                height: 2,
+                                color: Colors.deepPurpleAccent,
+                              ),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  dataFilter = newValue!;
+                                });
+                              },
+                              items: <String>[
+                                'steps',
+                                'calories'
+                              ].map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
                             ),
                           ],
                         ),
@@ -79,18 +168,31 @@ class _leaderboardPageState extends State<leaderboardPage> {
                         endIndent: 5,
                       ),
                       Container(
-                          height: 500,
+                          height: 450,
                           child: ListView(
                             shrinkWrap: true,
                             children: [
                               for (var index in usernameList)
                                 ListTile(
                                   leading: CircleAvatar(
-                                    backgroundImage:
-                                        AssetImage("images/Avatar.png"),
+                                    child: Text(index
+                                        .toString()
+                                        .substring(0, 1)
+                                        .toUpperCase()),
                                   ),
-                                  title: Text(index.toString()),
-                                  trailing: Text(dataMap[index].toString()),
+                                  title: Text(index.toString(),
+                                      style: index.toString() == username
+                                          ? TextStyle(
+                                              fontWeight: FontWeight.bold)
+                                          : TextStyle()),
+                                  trailing: Text(
+                                    dataMap[index].toString(),
+                                    style: index.toString() == username
+                                        ? TextStyle(
+                                            fontSize: 18.0,
+                                            fontWeight: FontWeight.bold)
+                                        : TextStyle(fontSize: 18.0),
+                                  ),
                                 ),
                             ],
                           )),

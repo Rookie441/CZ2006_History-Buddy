@@ -127,23 +127,21 @@ class _historicalsiteState extends State<historicalsite> {
   }
 
   // initialise the state of the UI
-  // call asyncLoad function to initialise the historical sites data
   @override
   void initState() {
     super.initState();
-    // asyncLoad();
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
         future: Future.wait([
-          asyncLoad(),
-        ]), //multiple futures to wait for
+          asyncLoad(), // call asyncLoad function to initialise the historical sites data
+        ]),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return Scaffold(
-                backgroundColor: Colors.white70,
+                backgroundColor: Colors.brown[100],
                 body: NestedScrollView(
                     floatHeaderSlivers: true,
                     headerSliverBuilder:
@@ -151,10 +149,12 @@ class _historicalsiteState extends State<historicalsite> {
                       return <Widget>[
                         SliverAppBar(
                           elevation: 0,
-                          backgroundColor: Colors.teal[200],
+                          backgroundColor: Colors.brown[200],
                           title: Text("Historical Sites",
-                              style:
-                                  TextStyle(fontSize: 22, color: Colors.white)),
+                              style: TextStyle(
+                                  fontSize: 30,
+                                  color: Colors.black,
+                                  fontFamily: 'Pacifico')),
                           centerTitle: true,
                           expandedHeight: 60.0,
                           floating: false,
@@ -185,18 +185,10 @@ class _historicalsiteState extends State<historicalsite> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
                                 Flexible(
-                                  child: Text(
-                                      historicalsite.sortedHistSites[index]
-                                          .getDesc()),
-                                      //maxLines: 3,
-                                      //overflow: TextOverflow.ellipsis),
+                                  child: Text(historicalsite
+                                      .sortedHistSites[index]
+                                      .getDesc()),
                                 ),
-                                //Padding(
-                                //padding: EdgeInsets.only(top: 8.0),
-                                //child: <Widget>[
-                                //starWidget(),
-                                //],
-                                // )
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.start,

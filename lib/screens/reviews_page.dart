@@ -10,7 +10,6 @@ class ReviewsPage extends StatelessWidget {
   final HistSite histsite;
 
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: Text(histsite.getName()),
@@ -20,55 +19,56 @@ class ReviewsPage extends StatelessWidget {
       body: _body(context),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
-        onPressed: (){
+        onPressed: () {
           Navigator.push(
-            context,
+              context,
               MaterialPageRoute(
                 builder: (context) => ReviewForm(histsite: histsite),
-              )
-          );
+              ));
         },
         backgroundColor: Colors.teal[200],
       ),
-      );
+    );
   }
 
-  Widget _body(BuildContext context){
+  Widget _body(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('reviews').where(
-        'hist_site', isEqualTo: histsite.getName()).snapshots(),
-      builder: (context,snapshot){
-        if(!snapshot.hasData) return LinearProgressIndicator();
-        if (snapshot.connectionState == ConnectionState.waiting){
+      stream: FirebaseFirestore.instance
+          .collection('reviews')
+          .where('hist_site', isEqualTo: histsite.getName())
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return LinearProgressIndicator();
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return Text("Loading");
         }
 
         return ListView(
           children: snapshot.data!.docs.map((DocumentSnapshot document) {
-            Map<String,dynamic> data = document.data()! as Map<String, dynamic>;
-              return ListTile(
-                leading: CircleAvatar(
-                  child: Text(data['reviewer'].substring(0,1).toUpperCase()),
-                ),
-                title: Text(data['reviewer']),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    _reviewsStarWidget(data['rating']),
-                    Text(data['comment']),
-                  ],
-                ),
-              );
+            Map<String, dynamic> data =
+                document.data()! as Map<String, dynamic>;
+            return ListTile(
+              leading: CircleAvatar(
+                child: Text(data['reviewer'].substring(0, 1).toUpperCase()),
+              ),
+              title: Text(data['reviewer']),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  _reviewsStarWidget(data['rating']),
+                  Text(data['comment']),
+                ],
+              ),
+            );
           }).toList(),
         );
       },
-      );
-
+    );
   }
 
   Widget _reviewsStarWidget(int rating) {
     var stars = <Widget>[];
-    for (int i = 0; i<5; i++){
+    for (int i = 0; i < 5; i++) {
       Icon star = i < rating
           ? Icon(Icons.star, color: Colors.orangeAccent, size: 12)
           : Icon(Icons.star_border, color: Colors.orangeAccent, size: 12);
@@ -79,8 +79,4 @@ class ReviewsPage extends StatelessWidget {
       children: stars,
     );
   }
-
-
-
-
 }

@@ -44,10 +44,10 @@ class _ReviewFormState extends State<ReviewForm> {
             controller: _reviewerController,
             decoration: InputDecoration(
                 labelText: 'Full name',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(5.0))
-            ),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(5.0))),
             validator: (reviewer) {
-              if(reviewer == null || reviewer.isEmpty) {
+              if (reviewer == null || reviewer.isEmpty) {
                 return 'Reviewers name field cannot be empty';
               }
             },
@@ -59,16 +59,16 @@ class _ReviewFormState extends State<ReviewForm> {
               controller: _ratingController,
               decoration: InputDecoration(
                   labelText: 'Rating',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(5.0))
-              ),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(5.0))),
               validator: (rating) {
-                if(rating == null || rating.isEmpty) {
+                if (rating == null || rating.isEmpty) {
                   return 'Rating field cannot be empty';
                 }
-                if(int.parse(rating) < 1) {
+                if (int.parse(rating) < 1) {
                   return 'Rating cannot be less than 1';
                 }
-                if(int.parse(rating) > 5) {
+                if (int.parse(rating) > 5) {
                   return 'Rating cannot be greater than 5';
                 }
               },
@@ -82,11 +82,12 @@ class _ReviewFormState extends State<ReviewForm> {
               controller: _commentController,
               decoration: InputDecoration(
                   labelText: 'Comment',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(5.0))
-              ),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(5.0))),
               maxLines: 4,
               validator: (comment) {
-                if(comment == null || comment.isEmpty) return 'Comment field cannot be empty';
+                if (comment == null || comment.isEmpty)
+                  return 'Comment field cannot be empty';
               },
             ),
           ),
@@ -95,17 +96,16 @@ class _ReviewFormState extends State<ReviewForm> {
             padding: EdgeInsets.only(top: 16.0),
             child: RaisedButton(
               onPressed: () {
-                if(_formKey.currentState!.validate()) {
+                if (_formKey.currentState!.validate()) {
+                  CollectionReference reviews =
+                      FirebaseFirestore.instance.collection('reviews');
 
-                  CollectionReference reviews = FirebaseFirestore.instance.collection('reviews');
-
-                  reviews
-                        .add({
-                      'hist_site': widget.histsite.getName(), // John Doe
-                      'reviewer': _reviewerController.text,
-                      'rating': int.parse(_ratingController.text),
-                      'comment': _commentController.text,
-                    });
+                  reviews.add({
+                    'hist_site': widget.histsite.getName(), // John Doe
+                    'reviewer': _reviewerController.text,
+                    'rating': int.parse(_ratingController.text),
+                    'comment': _commentController.text,
+                  });
 
                   Navigator.pop(context);
                 }
